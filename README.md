@@ -75,8 +75,8 @@ Shipping-cost and commodity-price features were built but never entered the mode
 60% directional accuracy beats chance but is not reliable, so forecasts are directional guidance, not commitments.
 The scorecard's category labels are an analyst-designed convention, not a statistical prediction.
 Repository
-├── Data_Science_Project_Final_Code.ipynb   # Full analysis, Blocks 1–9
-├── trade_corridor_dashboard.html           # Interactive dashboard, self-contained
+├── Global Trade Risk and Direction Code.ipynb   # Full analysis, Blocks 1–9
+├── Global Trade Risk and Direction HTML.html        # Interactive dashboard, self-contained
 ├── data/                                   # Source datasets
 └── README.md
 
