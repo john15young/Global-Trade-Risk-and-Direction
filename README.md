@@ -25,7 +25,7 @@ You would assume a fragile route is a shrinking route. We tested that on 1,100 h
 
 ## Data
 
-Six public Kaggle datasets merged into one balanced panel: trade flows, shipping rates, tariff timeline, commodity prices, disruption events, and industry vulnerability.
+Five public Kaggle datasets merged into one balanced panel: trade flows, shipping rates, commodity prices, disruption events, and industry vulnerability.
 
 **Final panel: 1,250 rows (50 corridors × 25 years), 58 columns, zero missing corridor-years.** Commodity prices start in 2010, so those columns are structurally missing before then. Documented, not imputed.
 
@@ -83,9 +83,9 @@ Structural exposure for 2024: **1 Low, 35 Moderate, 13 High, 1 Critical.** Cross
 ## Repository
 
 ```
-├── Data_Science_Project_Final_Code.ipynb   # Full analysis, Blocks 1–9
-├── trade_corridor_dashboard.html           # Interactive dashboard, self-contained
-├── data/                                   # Source datasets
+├── Global Trade Risk and Direction Code.ipynb   # Full analysis, Blocks 1–9
+├── Global Trade Risk and Direction HTML.html    # Interactive dashboard, self-contained
+├── data/                                        # Source datasets (5 CSVs)
 └── README.md
 ```
 
