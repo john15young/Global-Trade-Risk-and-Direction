@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Trade Corridor Health Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#11151b;
+  --bg-alt:#0d1015;
+  --panel:#171c25;
+  --panel-2:#1c222d;
+  --border:#2a3140;
+  --border-soft:#232a36;
+  --text:#e7eaef;
+  --text-dim:#93a0b3;
+  --text-faint:#5c6878;
+  --amber:#e0973f;
+  --amber-soft:#4a3a26;
+  --amber-glow:rgba(224,151,63,0.12);
+  --teal:#46c2b4;
+  --teal-soft:#1f3d3a;
+  --teal-glow:rgba(70,194,180,0.12);
+  --red:#d1614b;
+  --red-soft:#3e2521;
+  --slate:#7186a6;
+  --slate-soft:#232c3c;
+  --green:#7bbf8a;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'IBM Plex Sans', system-ui, sans-serif;
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+
+::selection{background:var(--teal-soft); color:var(--text);}
+
+.mono{font-family:'IBM Plex Mono', monospace;}
+.display{font-family:'Space Grotesk', sans-serif;}
+
+a{color:var(--teal);}
+
+/* ---------- TOP BAR ---------- */
+.topbar{
+  position:sticky; top:0; z-index:50;
+  background:rgba(17,21,27,0.92);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+  padding:14px 28px 0 28px;
+}
+.topbar-row{
+  display:flex; align-items:baseline; justify-content:space-between;
+  max-width:1400px; margin:0 auto; flex-wrap:wrap; gap:10px;
+}
+.brand{display:flex; align-items:baseline; gap:12px;}
+.brand-mark{
+  width:9px; height:9px; border-radius:2px;
+  background:linear-gradient(135deg, var(--amber), var(--teal));
+  display:inline-block; transform:translateY(-1px);
+}
+.brand h1{
+  font-family:'Space Grotesk', sans-serif;
+  font-size:17px; font-weight:600; margin:0; letter-spacing:0.2px;
+}
+.brand .sub{color:var(--text-faint); font-size:11.5px; font-family:'IBM Plex Mono', monospace;}
+.meta-strip{
+  display:flex; gap:22px; font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--text-dim);
+}
+.meta-strip span b{color:var(--text); font-weight:600;}
+
+.tabs{
+  max-width:1400px; margin:12px auto 0 auto;
+  display:flex; gap:4px; overflow-x:auto;
+}
+.tab{
+  padding:9px 16px; border:none; background:transparent; color:var(--text-dim);
+  font-family:'IBM Plex Sans', sans-serif; font-size:13px; font-weight:500;
+  cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap;
+  transition:color .15s, border-color .15s;
+}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--text);}
+.tab[data-lens="exposure"].active{border-color:var(--amber);}
+.tab[data-lens="growth"].active{border-color:var(--teal);}
+.tab[data-lens="overview"].active{border-color:var(--slate);}
+.tab[data-lens="findings"].active{border-color:var(--red);}
+.tab[data-lens="explorer"].active{border-color:var(--green);}
+
+/* ---------- LAYOUT ---------- */
+main{max-width:1400px; margin:0 auto; padding:26px 28px 80px 28px;}
+.view{display:none;}
+.view.active{display:block; animation:fade .25s ease;}
+@keyframes fade{from{opacity:0; transform:translateY(3px);} to{opacity:1; transform:translateY(0);}}
+
+.section-head{margin:34px 0 16px 0;}
+.section-head:first-child{margin-top:0;}
+.section-head h2{
+  font-family:'Space Grotesk', sans-serif; font-size:19px; font-weight:600; margin:0 0 4px 0;
+}
+.section-head p{color:var(--text-dim); font-size:13px; margin:0; max-width:760px;}
+.eyebrow{
+  font-family:'IBM Plex Mono', monospace; font-size:10.5px; letter-spacing:0.12em;
+  text-transform:uppercase; color:var(--text-faint); margin-bottom:6px; display:block;
+}
+
+.grid{display:grid; gap:16px;}
+.grid-4{grid-template-columns:repeat(4,1fr);}
+.grid-3{grid-template-columns:repeat(3,1fr);}
+.grid-2{grid-template-columns:repeat(2,1fr);}
+.grid-2-1{grid-template-columns:2fr 1fr;}
+.grid-1-2{grid-template-columns:1fr 2fr;}
+@media (max-width:980px){
+  .grid-4{grid-template-columns:repeat(2,1fr);}
+  .grid-3{grid-template-columns:repeat(1,1fr);}
+  .grid-2{grid-template-columns:repeat(1,1fr);}
+  .grid-2-1, .grid-1-2{grid-template-columns:1fr;}
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border-soft);
+  border-radius:10px;
+  padding:18px 20px;
+}
+.card h3{
+  font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600; margin:0 0 2px 0;
+}
+.card .card-note{color:var(--text-faint); font-size:11.5px; margin:0 0 14px 0;}
+.chart-box{width:100%;}
+.chart-box svg{width:100%; height:auto; display:block;}
+
+/* KPI cards */
+.kpi{
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:10px;
+  padding:16px 18px; position:relative; overflow:hidden;
+}
+.kpi::before{
+  content:""; position:absolute; left:0; top:0; bottom:0; width:3px;
+}
+.kpi.k-amber::before{background:var(--amber);}
+.kpi.k-teal::before{background:var(--teal);}
+.kpi.k-slate::before{background:var(--slate);}
+.kpi.k-red::before{background:var(--red);}
+.kpi .kpi-label{
+  font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--text-faint);
+  text-transform:uppercase; letter-spacing:0.08em; margin-bottom:8px;
+}
+.kpi .kpi-value{
+  font-family:'Space Grotesk', sans-serif; font-size:26px; font-weight:600; line-height:1;
+}
+.kpi .kpi-sub{font-size:11.5px; color:var(--text-dim); margin-top:6px;}
+
+/* Tables */
+.table-wrap{overflow-x:auto;}
+table{width:100%; border-collapse:collapse; font-size:12.5px;}
+thead th{
+  text-align:left; padding:8px 10px; font-family:'IBM Plex Mono', monospace;
+  font-size:10.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--text-faint);
+  border-bottom:1px solid var(--border); white-space:nowrap; cursor:pointer; user-select:none;
+}
+thead th:hover{color:var(--text-dim);}
+thead th.sorted{color:var(--text);}
+tbody td{padding:8px 10px; border-bottom:1px solid var(--border-soft); white-space:nowrap; font-family:'IBM Plex Mono', monospace;}
+tbody td.txt{font-family:'IBM Plex Sans', sans-serif; white-space:normal;}
+tbody tr:hover{background:var(--panel-2);}
+
+.badge{
+  display:inline-block; padding:2px 8px; border-radius:20px; font-size:10.5px;
+  font-family:'IBM Plex Mono', monospace; font-weight:500;
+}
+.badge-core{background:var(--slate-soft); color:var(--slate);}
+.badge-elevated{background:var(--amber-soft); color:var(--amber);}
+.badge-strategic{background:var(--red-soft); color:var(--red);}
+.badge-lower{background:var(--teal-soft); color:var(--teal);}
+.badge-low{background:var(--slate-soft); color:var(--slate);}
+.badge-moderate{background:var(--amber-soft); color:var(--amber);}
+.badge-high{background:var(--red-soft); color:var(--red);}
+.badge-critical{background:var(--red); color:#1a0e0b;}
+
+/* Callout / findings cards */
+.finding{
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:10px;
+  padding:18px 20px; display:flex; gap:14px;
+}
+.finding .f-num{
+  font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:600; color:var(--text-faint);
+  min-width:34px;
+}
+.finding h4{font-family:'Space Grotesk', sans-serif; font-size:14.5px; margin:0 0 6px 0;}
+.finding p{margin:0; color:var(--text-dim); font-size:12.8px;}
+.finding .stat{
+  font-family:'IBM Plex Mono', monospace; color:var(--text); background:var(--panel-2);
+  padding:1px 6px; border-radius:4px; font-size:12px;
+}
+.finding.f-amber{border-left:3px solid var(--amber);}
+.finding.f-teal{border-left:3px solid var(--teal);}
+.finding.f-red{border-left:3px solid var(--red);}
+.finding.f-slate{border-left:3px solid var(--slate);}
+
+/* Lens diagram */
+.lens-panel{
+  background:var(--panel); border:1px solid var(--border-soft); border-radius:10px;
+  padding:26px; display:flex; gap:30px; align-items:center; flex-wrap:wrap;
+}
+.lens-svg-wrap{flex:0 0 320px;}
+.lens-copy{flex:1; min-width:280px;}
+.lens-copy .stat-row{
+  display:flex; gap:26px; margin-top:16px; flex-wrap:wrap;
+}
+.lens-copy .stat-block .num{font-family:'Space Grotesk', sans-serif; font-size:22px; font-weight:600;}
+.lens-copy .stat-block .lbl{font-size:11px; color:var(--text-faint); font-family:'IBM Plex Mono', monospace;}
+
+/* Explorer */
+.filter-row{display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+.filter-row input[type="text"]{
+  background:var(--panel-2); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); padding:8px 12px; font-family:'IBM Plex Sans'; font-size:12.5px;
+  min-width:220px;
+}
+.filter-row select{
+  background:var(--panel-2); border:1px solid var(--border); border-radius:6px;
+  color:var(--text); padding:8px 10px; font-family:'IBM Plex Sans'; font-size:12.5px;
+}
+.filter-row .count{color:var(--text-faint); font-size:11.5px; margin-left:auto; font-family:'IBM Plex Mono', monospace;}
+
+footer{
+  max-width:1400px; margin:0 auto; padding:20px 28px 60px 28px;
+  color:var(--text-faint); font-size:11.5px; border-top:1px solid var(--border-soft); margin-top:40px;
+}
+
+.legend-row{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; font-size:11.5px; color:var(--text-dim);}
+.legend-row .dot{width:8px; height:8px; border-radius:50%; display:inline-block; margin-right:6px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <h1>Trade Corridor Health Monitor</h1>
+      <span class="sub">50 corridors · 2000–2024 · Gradient Boosting v2.0</span>
+    </div>
+    <div class="meta-strip" id="meta-strip"></div>
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-lens="overview" data-target="view-overview">Overview</button>
+    <button class="tab" data-lens="exposure" data-target="view-exposure">Structural Exposure</button>
+    <button class="tab" data-lens="growth" data-target="view-growth">Growth Direction</button>
+    <button class="tab" data-lens="findings" data-target="view-findings">Findings &amp; Validation</button>
+    <button class="tab" data-lens="explorer" data-target="view-explorer">Corridor Explorer</button>
+  </div>
+</div>
+
+<main>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section class="view active" id="view-overview">
+    <div class="section-head">
+      <span class="eyebrow">System overview</span>
+      <h2>Global trade corridor landscape</h2>
+      <p>A panel of 50 major bilateral trade corridors tracked since 2000, merged with shipping, commodity, disruption and industry-vulnerability data into a single analytical base table.</p>
+    </div>
+
+    <div class="grid grid-4" id="kpi-row"></div>
+
+    <div class="grid grid-2-1" style="margin-top:16px;">
+      <div class="card">
+        <h3>Global trade value, 2000–2024</h3>
+        <p class="card-note">Sum of trade value across all 50 corridors, by year (USD Bn)</p>
+        <div id="chart-trade-year" class="chart-box"></div>
+      </div>
+      <div class="card">
+        <h3>Sector share, latest year</h3>
+        <p class="card-note">Trade value by standardized sector</p>
+        <div id="chart-sector-donut" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Top 15 corridors by trade value (latest year)</h3>
+      <p class="card-note">Bars colored by 3-year growth trend</p>
+      <div id="chart-top-corridors" class="chart-box"></div>
+    </div>
+  </section>
+
+  <!-- ===================== STRUCTURAL EXPOSURE ===================== -->
+  <section class="view" id="view-exposure">
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--amber);">Lens 1 — backward-looking</span>
+      <h2>Structural exposure monitor</h2>
+      <p>A rule-based scorecard: which corridors are concentrated, volatile, or dependent on vulnerable industries <em>right now</em>. Thresholds are percentile-based (data-driven); the category labels are an analyst-designed scoring convention, not a statistical prediction.</p>
+    </div>
+
+    <div class="grid grid-4" id="quadrant-kpis"></div>
+
+    <div class="grid grid-2-1" style="margin-top:16px;">
+      <div class="card">
+        <h3>Trade importance vs. risk exposure</h3>
+        <p class="card-note">Bubble size = trade value. Quadrant assigned from percentile thresholds on importance &amp; risk.</p>
+        <div id="chart-quadrant-scatter" class="chart-box"></div>
+        <div class="legend-row" id="quadrant-legend"></div>
+      </div>
+      <div class="card">
+        <h3>Risk category distribution</h3>
+        <p class="card-note">Count of corridors by combined risk-flag count</p>
+        <div id="chart-risk-dist" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px;">
+      <h3>Quadrant summary</h3>
+      <div class="table-wrap"><table id="table-quadrant-summary"></table></div>
+    </div>
+  </section>
+
+  <!-- ===================== GROWTH DIRECTION ===================== -->
+  <section class="view" id="view-growth">
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--teal);">Lens 2 — forward-looking</span>
+      <h2>Growth direction model</h2>
+      <p>A Gradient Boosting regressor predicts each corridor's next-year trade growth from its own history, shipping conditions, commodity prices, disruption exposure and industry vulnerability — evaluated on a strict time-based holdout (train ≤2019, validate 2020–21, test 2022–23).</p>
+    </div>
+
+    <div class="grid grid-4" id="model-kpis"></div>
+
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Validation MAE by model</h3>
+        <p class="card-note">Lower is better. Naive baseline = "next year repeats this year's growth"</p>
+        <div id="chart-model-compare" class="chart-box"></div>
+      </div>
+      <div class="card">
+        <h3>Actual vs. predicted next-year growth (test set)</h3>
+        <p class="card-note">Dashed line = perfect prediction. Red point = flagged outlier</p>
+        <div id="chart-actual-predicted" class="chart-box"></div>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Feature importance — built-in vs. permutation</h3>
+        <p class="card-note">Built-in (impurity) importance can overstate features the tree happened to split on; permutation importance measures the real drop in held-out accuracy</p>
+        <div id="chart-importance" class="chart-box"></div>
+      </div>
+      <div class="card">
+        <h3>Outlier sensitivity</h3>
+        <p class="card-note">Test metrics with vs. without the single flagged outlier</p>
+        <div class="table-wrap"><table id="table-outlier-sensitivity"></table></div>
+        <p class="card-note" style="margin-top:14px;">Flagged observation</p>
+        <div class="table-wrap"><table id="table-flagged-outlier"></table></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINDINGS ===================== -->
+  <section class="view" id="view-findings">
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--red);">Critical findings</span>
+      <h2>What actually held up under scrutiny</h2>
+      <p>Four findings that changed how we'd describe this system to a stakeholder — including one that determines how the two lenses above should, and should not, be used together.</p>
+    </div>
+
+    <div class="grid grid-2" id="findings-grid" style="margin-top:6px;"></div>
+
+    <div class="section-head" style="margin-top:40px;">
+      <span class="eyebrow">Do the two lenses agree?</span>
+      <h2>Structural exposure ≠ growth direction</h2>
+      <p>We tested whether corridors flagged as structurally "high risk" in a given year actually go on to contract the following year, using the full historical panel where the outcome is already known.</p>
+    </div>
+
+    <div class="lens-panel" style="margin-top:6px;">
+      <div class="lens-svg-wrap">
+        <svg viewBox="0 0 320 220" width="100%">
+          <circle cx="130" cy="110" r="88" fill="var(--amber-glow)" stroke="var(--amber)" stroke-width="1.5"/>
+          <circle cx="210" cy="110" r="70" fill="var(--teal-glow)" stroke="var(--teal)" stroke-width="1.5"/>
+          <text x="82" y="55" fill="var(--amber)" font-family="IBM Plex Mono" font-size="11">STRUCTURAL</text>
+          <text x="88" y="68" fill="var(--amber)" font-family="IBM Plex Mono" font-size="11">EXPOSURE</text>
+          <text x="222" y="150" fill="var(--teal)" font-family="IBM Plex Mono" font-size="11">GROWTH</text>
+          <text x="220" y="163" fill="var(--teal)" font-family="IBM Plex Mono" font-size="11">DIRECTION</text>
+          <text x="163" y="114" fill="var(--text)" font-family="IBM Plex Mono" font-size="10" text-anchor="middle">r = 0.12</text>
+        </svg>
+      </div>
+      <div class="lens-copy">
+        <h3 style="font-family:'Space Grotesk'; font-size:15px; margin:0 0 8px 0;">Nearly independent signals, by design and by measurement</h3>
+        <p style="color:var(--text-dim); font-size:12.8px; margin:0;">
+          The overlap above is drawn to scale with the data: a corridor's structural-exposure score tells you almost nothing about which direction its trade will move next year, and vice versa. That's not a flaw in either framework — they're built to answer different questions.
+        </p>
+        <div class="stat-row">
+          <div class="stat-block"><div class="num" id="stat-spearman"></div><div class="lbl">SPEARMAN CORR.</div></div>
+          <div class="stat-block"><div class="num" id="stat-precision"></div><div class="lbl">CONTRACTION PRECISION</div></div>
+          <div class="stat-block"><div class="num" id="stat-recall"></div><div class="lbl">CONTRACTION RECALL</div></div>
+          <div class="stat-block"><div class="num" id="stat-n"></div><div class="lbl">CORRIDOR-YEARS TESTED</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-2-1" style="margin-top:16px;">
+      <div class="card">
+        <h3>Next-year growth by risk-flag count</h3>
+        <p class="card-note">If exposure predicted direction, this bar would slope downward. It doesn't.</p>
+        <div id="chart-risk-growth" class="chart-box"></div>
+      </div>
+      <div class="card">
+        <h3>Confusion matrix</h3>
+        <p class="card-note">"High/Critical Risk" flag vs. actual next-year contraction</p>
+        <div id="confusion-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== EXPLORER ===================== -->
+  <section class="view" id="view-explorer">
+    <div class="section-head">
+      <span class="eyebrow" style="color:var(--green);">Both lenses, per corridor</span>
+      <h2>Corridor explorer</h2>
+      <p>Search, sort and inspect every corridor's structural-exposure quadrant alongside its predicted next-year growth direction.</p>
+    </div>
+
+    <div class="filter-row">
+      <input type="text" id="explorer-search" placeholder="Search corridor, sector, industry…" />
+      <select id="explorer-quadrant-filter">
+        <option value="">All quadrants</option>
+      </select>
+      <span class="count" id="explorer-count"></span>
+    </div>
+
+    <div class="card">
+      <div class="table-wrap"><table id="table-explorer"></table></div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  Beyond Historical Disruptions — A Predictive Decision Framework for Monitoring Global Trade Corridor Health · Dashboard generated from notebook outputs · All figures reproduced from the fitted model and historical panel, not illustrative placeholders.
+</footer>
+
+<script id="dashboard-data" type="application/json">{"meta": {"latest_year": 2024, "best_model_name": "Gradient Boosting", "n_corridors": 50, "n_years": 25, "year_min": 2000, "year_max": 2024, "total_trade_latest_year_bn": 5426.750000000002}, "global_trade_by_year": [{"year": 2000, "total_trade_bn": 3414.19}, {"year": 2001, "total_trade_bn": 3625.27}, {"year": 2002, "total_trade_bn": 3797.03}, {"year": 2003, "total_trade_bn": 3940.79}, {"year": 2004, "total_trade_bn": 4186.97}, {"year": 2005, "total_trade_bn": 4336.85}, {"year": 2006, "total_trade_bn": 4644.72}, {"year": 2007, "total_trade_bn": 4851.45}, {"year": 2008, "total_trade_bn": 5032.74}, {"year": 2009, "total_trade_bn": 4402.55}, {"year": 2010, "total_trade_bn": 4992.66}, {"year": 2011, "total_trade_bn": 5079.66}, {"year": 2012, "total_trade_bn": 5060.83}, {"year": 2013, "total_trade_bn": 5117.08}, {"year": 2014, "total_trade_bn": 5089.77}, {"year": 2015, "total_trade_bn": 5088.6}, {"year": 2016, "total_trade_bn": 5056.88}, {"year": 2017, "total_trade_bn": 5063.21}, {"year": 2018, "total_trade_bn": 5082.9}, {"year": 2019, "total_trade_bn": 5029.06}, {"year": 2020, "total_trade_bn": 4626.01}, {"year": 2021, "total_trade_bn": 5463.58}, {"year": 2022, "total_trade_bn": 5483.68}, {"year": 2023, "total_trade_bn": 5460.78}, {"year": 2024, "total_trade_bn": 5426.75}], "sector_trade_by_year": [{"year": 2000, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 23.86}, {"year": 2000, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 565.04}, {"year": 2000, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 163.98}, {"year": 2000, "standard_trade_category": "Energy", "trade_value_bn_usd": 195.5}, {"year": 2000, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 188.98}, {"year": 2000, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 1910.6}, {"year": 2000, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 295.45}, {"year": 2000, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 70.78}, {"year": 2001, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 25.65}, {"year": 2001, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 605.55}, {"year": 2001, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 179.11}, {"year": 2001, "standard_trade_category": "Energy", "trade_value_bn_usd": 209.28}, {"year": 2001, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 198.21}, {"year": 2001, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 1997.86}, {"year": 2001, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 336.41}, {"year": 2001, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 73.2}, {"year": 2002, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 24.74}, {"year": 2002, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 650.14}, {"year": 2002, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 192.82}, {"year": 2002, "standard_trade_category": "Energy", "trade_value_bn_usd": 219.58}, {"year": 2002, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 207.92}, {"year": 2002, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2088.18}, {"year": 2002, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 337.02}, {"year": 2002, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 76.63}, {"year": 2003, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 26.51}, {"year": 2003, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 658.6}, {"year": 2003, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 199.75}, {"year": 2003, "standard_trade_category": "Energy", "trade_value_bn_usd": 229.66}, {"year": 2003, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 216.43}, {"year": 2003, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2183.55}, {"year": 2003, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 346.67}, {"year": 2003, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 79.62}, {"year": 2004, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 27.28}, {"year": 2004, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 703.85}, {"year": 2004, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 204.93}, {"year": 2004, "standard_trade_category": "Energy", "trade_value_bn_usd": 243.54}, {"year": 2004, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 237.23}, {"year": 2004, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2311.09}, {"year": 2004, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 375.74}, {"year": 2004, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 83.31}, {"year": 2005, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 29.76}, {"year": 2005, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 766.94}, {"year": 2005, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 209.6}, {"year": 2005, "standard_trade_category": "Energy", "trade_value_bn_usd": 247.27}, {"year": 2005, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 248.36}, {"year": 2005, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2371.64}, {"year": 2005, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 372.91}, {"year": 2005, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 90.37}, {"year": 2006, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 28.72}, {"year": 2006, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 766.42}, {"year": 2006, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 230.38}, {"year": 2006, "standard_trade_category": "Energy", "trade_value_bn_usd": 262.37}, {"year": 2006, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 255.04}, {"year": 2006, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2590.38}, {"year": 2006, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 413.63}, {"year": 2006, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 97.78}, {"year": 2007, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 34.81}, {"year": 2007, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 792.58}, {"year": 2007, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 236.68}, {"year": 2007, "standard_trade_category": "Energy", "trade_value_bn_usd": 282.32}, {"year": 2007, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 262.93}, {"year": 2007, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2712.47}, {"year": 2007, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 433.42}, {"year": 2007, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 96.24}, {"year": 2008, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 34.6}, {"year": 2008, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 863.2}, {"year": 2008, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 248.85}, {"year": 2008, "standard_trade_category": "Energy", "trade_value_bn_usd": 284.74}, {"year": 2008, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 272.17}, {"year": 2008, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2760.53}, {"year": 2008, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 466.73}, {"year": 2008, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 101.92}, {"year": 2009, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 30.25}, {"year": 2009, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 730.64}, {"year": 2009, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 219.68}, {"year": 2009, "standard_trade_category": "Energy", "trade_value_bn_usd": 251.79}, {"year": 2009, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 245.51}, {"year": 2009, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2440.55}, {"year": 2009, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 391.42}, {"year": 2009, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 92.71}, {"year": 2010, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 32.92}, {"year": 2010, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 858.4}, {"year": 2010, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 256.8}, {"year": 2010, "standard_trade_category": "Energy", "trade_value_bn_usd": 286.73}, {"year": 2010, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 281.79}, {"year": 2010, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2730.55}, {"year": 2010, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 445.93}, {"year": 2010, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 99.54}, {"year": 2011, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 33.35}, {"year": 2011, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 859.56}, {"year": 2011, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 249.51}, {"year": 2011, "standard_trade_category": "Energy", "trade_value_bn_usd": 285.82}, {"year": 2011, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 281.8}, {"year": 2011, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2799.9}, {"year": 2011, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 464.38}, {"year": 2011, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 105.34}, {"year": 2012, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 32.23}, {"year": 2012, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 856.97}, {"year": 2012, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 245.28}, {"year": 2012, "standard_trade_category": "Energy", "trade_value_bn_usd": 287.04}, {"year": 2012, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 278.99}, {"year": 2012, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2793.84}, {"year": 2012, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 466.63}, {"year": 2012, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 99.85}, {"year": 2013, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 32.85}, {"year": 2013, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 831.62}, {"year": 2013, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 244.59}, {"year": 2013, "standard_trade_category": "Energy", "trade_value_bn_usd": 295.52}, {"year": 2013, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 290.99}, {"year": 2013, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2858.32}, {"year": 2013, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 463.74}, {"year": 2013, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 99.45}, {"year": 2014, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 31.87}, {"year": 2014, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 834.3}, {"year": 2014, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 251.68}, {"year": 2014, "standard_trade_category": "Energy", "trade_value_bn_usd": 288.36}, {"year": 2014, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 289.3}, {"year": 2014, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2855.77}, {"year": 2014, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 437.82}, {"year": 2014, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 100.67}, {"year": 2015, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 36.93}, {"year": 2015, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 858.47}, {"year": 2015, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 248.76}, {"year": 2015, "standard_trade_category": "Energy", "trade_value_bn_usd": 285.34}, {"year": 2015, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 280.35}, {"year": 2015, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2812.88}, {"year": 2015, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 463.97}, {"year": 2015, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 101.9}, {"year": 2016, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 35.55}, {"year": 2016, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 868.83}, {"year": 2016, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 246.04}, {"year": 2016, "standard_trade_category": "Energy", "trade_value_bn_usd": 298.08}, {"year": 2016, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 281.46}, {"year": 2016, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2781.75}, {"year": 2016, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 446.87}, {"year": 2016, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 98.3}, {"year": 2017, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 34.34}, {"year": 2017, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 850.48}, {"year": 2017, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 246.06}, {"year": 2017, "standard_trade_category": "Energy", "trade_value_bn_usd": 300.31}, {"year": 2017, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 279.31}, {"year": 2017, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2784.66}, {"year": 2017, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 465.55}, {"year": 2017, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 102.5}, {"year": 2018, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 32.76}, {"year": 2018, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 854.73}, {"year": 2018, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 237.44}, {"year": 2018, "standard_trade_category": "Energy", "trade_value_bn_usd": 287.05}, {"year": 2018, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 291.1}, {"year": 2018, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2797.42}, {"year": 2018, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 482.0}, {"year": 2018, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 100.4}, {"year": 2019, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 34.85}, {"year": 2019, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 866.78}, {"year": 2019, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 246.85}, {"year": 2019, "standard_trade_category": "Energy", "trade_value_bn_usd": 284.92}, {"year": 2019, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 273.19}, {"year": 2019, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2773.15}, {"year": 2019, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 442.24}, {"year": 2019, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 107.08}, {"year": 2020, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 31.93}, {"year": 2020, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 793.48}, {"year": 2020, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 225.06}, {"year": 2020, "standard_trade_category": "Energy", "trade_value_bn_usd": 277.42}, {"year": 2020, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 259.62}, {"year": 2020, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2515.91}, {"year": 2020, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 426.12}, {"year": 2020, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 96.47}, {"year": 2021, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 35.79}, {"year": 2021, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 907.67}, {"year": 2021, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 263.99}, {"year": 2021, "standard_trade_category": "Energy", "trade_value_bn_usd": 320.12}, {"year": 2021, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 305.37}, {"year": 2021, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2988.22}, {"year": 2021, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 525.46}, {"year": 2021, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 116.96}, {"year": 2022, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 37.34}, {"year": 2022, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 908.92}, {"year": 2022, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 264.64}, {"year": 2022, "standard_trade_category": "Energy", "trade_value_bn_usd": 260.84}, {"year": 2022, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 303.83}, {"year": 2022, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 3088.42}, {"year": 2022, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 505.24}, {"year": 2022, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 114.45}, {"year": 2023, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 36.19}, {"year": 2023, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 914.4}, {"year": 2023, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 269.47}, {"year": 2023, "standard_trade_category": "Energy", "trade_value_bn_usd": 315.75}, {"year": 2023, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 305.33}, {"year": 2023, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 3003.41}, {"year": 2023, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 503.69}, {"year": 2023, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 112.54}, {"year": 2024, "standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 34.1}, {"year": 2024, "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 928.36}, {"year": 2024, "standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 267.6}, {"year": 2024, "standard_trade_category": "Energy", "trade_value_bn_usd": 315.45}, {"year": 2024, "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 300.1}, {"year": 2024, "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2978.12}, {"year": 2024, "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 483.15}, {"year": 2024, "standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 119.87}], "sector_totals_latest": [{"standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 2978.12}, {"standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 928.36}, {"standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 483.15}, {"standard_trade_category": "Energy", "trade_value_bn_usd": 315.45}, {"standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 300.1}, {"standard_trade_category": "Electronics & Semiconductors", "trade_value_bn_usd": 267.6}, {"standard_trade_category": "Textiles & Apparel", "trade_value_bn_usd": 119.87}, {"standard_trade_category": "Agriculture & Food", "trade_value_bn_usd": 34.1}], "top_corridors_latest": [{"corridor": "USA → Canada", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 564.52, "share_global_trade": 0.1040254296, "growth_3yr_avg": 1.2033333333, "trade_momentum": -5.3933333333, "concentration_risk": 0.312, "overall_vulnerability": 6.444}, {"corridor": "Canada → USA", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 547.82, "share_global_trade": 0.1009480813, "growth_3yr_avg": -1.5766666667, "trade_momentum": 2.38, "concentration_risk": 0.341, "overall_vulnerability": 6.444}, {"corridor": "Mexico → USA", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 508.35, "share_global_trade": 0.0936748514, "growth_3yr_avg": 4.6333333333, "trade_momentum": -9.9066666667, "concentration_risk": 0.1, "overall_vulnerability": 6.444}, {"corridor": "USA → Mexico", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 413.85, "share_global_trade": 0.0762611139, "growth_3yr_avg": -3.2733333333, "trade_momentum": -20.9233333333, "concentration_risk": 0.1, "overall_vulnerability": 6.444}, {"corridor": "USA → EU", "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 360.36, "share_global_trade": 0.0664043857, "growth_3yr_avg": 1.0233333333, "trade_momentum": -3.56, "concentration_risk": 0.228, "overall_vulnerability": 7.87}, {"corridor": "EU → USA", "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 334.55, "share_global_trade": 0.0616483162, "growth_3yr_avg": -4.26, "trade_momentum": -3.2833333333, "concentration_risk": 0.474, "overall_vulnerability": 5.99}, {"corridor": "China → Japan", "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 141.31, "share_global_trade": 0.0260395264, "growth_3yr_avg": 3.2433333333, "trade_momentum": 9.1433333333, "concentration_risk": 0.39, "overall_vulnerability": 7.87}, {"corridor": "Japan → China", "standard_trade_category": "Automotive & Machinery", "trade_value_bn_usd": 134.75, "share_global_trade": 0.0248306998, "growth_3yr_avg": 0.4833333333, "trade_momentum": -9.24, "concentration_risk": 0.201, "overall_vulnerability": 7.87}, {"corridor": "China → USA", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 127.68, "share_global_trade": 0.0235278942, "growth_3yr_avg": -1.74, "trade_momentum": -1.9433333333, "concentration_risk": 0.328, "overall_vulnerability": 6.444}, {"corridor": "USA → China", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 125.12, "share_global_trade": 0.023056157, "growth_3yr_avg": 1.5466666667, "trade_momentum": -14.0366666667, "concentration_risk": 0.26, "overall_vulnerability": 6.444}, {"corridor": "China → EU", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 120.89, "share_global_trade": 0.0222766849, "growth_3yr_avg": -1.75, "trade_momentum": -2.7466666667, "concentration_risk": 0.232, "overall_vulnerability": 6.444}, {"corridor": "South Africa → China", "standard_trade_category": "Mining & Metals", "trade_value_bn_usd": 93.2, "share_global_trade": 0.0171741834, "growth_3yr_avg": 0.6, "trade_momentum": -2.07, "concentration_risk": 0.532, "overall_vulnerability": 6.99}, {"corridor": "Switzerland → EU", "standard_trade_category": "Pharmaceuticals & Chemicals", "trade_value_bn_usd": 91.33, "share_global_trade": 0.0168295941, "growth_3yr_avg": 1.6633333333, "trade_momentum": -13.8233333333, "concentration_risk": 0.24, "overall_vulnerability": 5.99}, {"corridor": "India → China", "standard_trade_category": "Multi-sector Trade", "trade_value_bn_usd": 90.86, "share_global_trade": 0.0167429861, "growth_3yr_avg": 0.6766666667, "trade_momentum": 0.55, "concentration_risk": 0.291, "overall_vulnerability": 6.444}, {"corridor": "Egypt → EU", "standard_trade_category": "Energy", "trade_value_bn_usd": 88.2, "share_global_trade": 0.0162528217, "growth_3yr_avg": 0.4533333333, "trade_momentum": 0.9566666667, "concentration_risk": 0.572, "overall_vulnerability": 6.99}], "risk_distribution": [{"overall_risk_category": "Moderate Risk", "Corridors": 35}, {"overall_risk_category": "High Risk", "Corridors": 13}, {"overall_risk_category": "Low Risk", "Corridors": 1}, {"overall_risk_category": "Critical Risk", "Corridors": 1}], "quadrant_summary": [{"priority_quadrant": "Core Stable Corridors", "corridor_count": 8, "total_trade_value_bn": 2978.02, "average_risk_exposure": 38.75, "average_growth": -0.7175}, {"priority_quadrant": "Elevated Exposure", "corridor_count": 22, "total_trade_value_bn": 1150.9, "average_risk_exposure": 64.4242424242, "average_growth": 2.6887878788}, {"priority_quadrant": "Lower-Risk Opportunity", "corridor_count": 17, "total_trade_value_bn": 896.65, "average_risk_exposure": 38.1960784314, "average_growth": 0.108627451}, {"priority_quadrant": "Strategic Exposure", "corridor_count": 3, "total_trade_value_bn": 401.18, "average_risk_exposure": 57.7777777778, "average_growth": 1.7577777778}], "quadrant_scatter": [{"corridor": "USA → Canada", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 564.52, "share_global_trade": 0.1040254296, "relative_risk_exposure": 29.0, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 4.2845370818, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Canada → USA", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 547.82, "share_global_trade": 0.1009480813, "relative_risk_exposure": 47.6666666667, "performance_trajectory": "Recovering", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 8.3530301447, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Mexico → USA", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 508.35, "share_global_trade": 0.0936748514, "relative_risk_exposure": 43.0, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 4.6264528146, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "USA → Mexico", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 413.85, "share_global_trade": 0.0762611139, "relative_risk_exposure": 41.0, "performance_trajectory": "Deteriorating", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 11.8630819422, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "USA → EU", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 360.36, "share_global_trade": 0.0664043857, "relative_risk_exposure": 48.6666666667, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 2.4110609508, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "EU → USA", "standard_trade_category": "Pharmaceuticals & Chemicals", "mapped_industry": "Pharma & Medical", "trade_value_bn_usd": 334.55, "share_global_trade": 0.0616483162, "relative_risk_exposure": 50.0, "performance_trajectory": "Deteriorating", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 12.4931164529, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "China → Japan", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 141.31, "share_global_trade": 0.0260395264, "relative_risk_exposure": 69.6666666667, "performance_trajectory": "Strengthening", "priority_quadrant": "Strategic Exposure", "predicted_next_year_growth": 2.453580697, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Strengthen resilience and monitor closely"}, {"corridor": "Japan → China", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 134.75, "share_global_trade": 0.0248306998, "relative_risk_exposure": 51.3333333333, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Strategic Exposure", "predicted_next_year_growth": 5.028104447, "forecast_outlook": "Strong Growth", "executive_recommendation": "Strengthen resilience and monitor closely"}, {"corridor": "China → USA", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 127.68, "share_global_trade": 0.0235278942, "relative_risk_exposure": 31.6666666667, "performance_trajectory": "Deteriorating", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 5.8645745056, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "USA → China", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 125.12, "share_global_trade": 0.023056157, "relative_risk_exposure": 52.3333333333, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Strategic Exposure", "predicted_next_year_growth": -0.906169046, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Urgent mitigation and supplier diversification"}, {"corridor": "China → EU", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 120.89, "share_global_trade": 0.0222766849, "relative_risk_exposure": 19.0, "performance_trajectory": "Deteriorating", "priority_quadrant": "Core Stable Corridors", "predicted_next_year_growth": 8.7650949832, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "South Africa → China", "standard_trade_category": "Mining & Metals", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 93.2, "share_global_trade": 0.0171741834, "relative_risk_exposure": 80.0, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": -1.0344906277, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Switzerland → EU", "standard_trade_category": "Pharmaceuticals & Chemicals", "mapped_industry": "Pharma & Medical", "trade_value_bn_usd": 91.33, "share_global_trade": 0.0168295941, "relative_risk_exposure": 40.0, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": -2.4567863805, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "India → China", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 90.86, "share_global_trade": 0.0167429861, "relative_risk_exposure": 31.0, "performance_trajectory": "Strengthening", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 3.6614539216, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Egypt → EU", "standard_trade_category": "Energy", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 88.2, "share_global_trade": 0.0162528217, "relative_risk_exposure": 63.3333333333, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": -1.4772927011, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Chile → China", "standard_trade_category": "Mining & Metals", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 85.71, "share_global_trade": 0.0157939835, "relative_risk_exposure": 35.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 8.2017302498, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Mexico → Canada", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 85.0, "share_global_trade": 0.0156631501, "relative_risk_exposure": 70.3333333333, "performance_trajectory": "Recovering", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 7.8663634519, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Philippines → USA", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 84.17, "share_global_trade": 0.0155102041, "relative_risk_exposure": 51.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 4.4462846343, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Sweden → EU", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 84.01, "share_global_trade": 0.0154807205, "relative_risk_exposure": 57.6666666667, "performance_trajectory": "Deteriorating", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 7.0013245278, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Colombia → USA", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 82.38, "share_global_trade": 0.0151803566, "relative_risk_exposure": 61.3333333333, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": -4.1963274786, "forecast_outlook": "Significant Contraction", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Vietnam → China", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 80.63, "share_global_trade": 0.0148578799, "relative_risk_exposure": 45.6666666667, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 7.8369001106, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Russia → EU", "standard_trade_category": "Energy", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 79.86, "share_global_trade": 0.0147159902, "relative_risk_exposure": 65.3333333333, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": -9.3181011097, "forecast_outlook": "Significant Contraction", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Nigeria → China", "standard_trade_category": "Energy", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 78.3, "share_global_trade": 0.0144285254, "relative_risk_exposure": 42.6666666667, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 5.2927892506, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Indonesia → Japan", "standard_trade_category": "Mining & Metals", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 72.67, "share_global_trade": 0.013391072, "relative_risk_exposure": 66.0, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 6.3213440103, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Indonesia → China", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 71.98, "share_global_trade": 0.0132639241, "relative_risk_exposure": 18.3333333333, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 5.0843226084, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Saudi Arabia → China", "standard_trade_category": "Energy", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 69.09, "share_global_trade": 0.012731377, "relative_risk_exposure": 57.3333333333, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": -2.403515237, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "France → China", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 59.43, "share_global_trade": 0.010951306, "relative_risk_exposure": 41.0, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 7.3841297479, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "India → USA", "standard_trade_category": "Pharmaceuticals & Chemicals", "mapped_industry": "Pharma & Medical", "trade_value_bn_usd": 57.27, "share_global_trade": 0.0105532777, "relative_risk_exposure": 36.0, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 0.4557953144, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Pakistan → EU", "standard_trade_category": "Textiles & Apparel", "mapped_industry": "Retail & Apparel", "trade_value_bn_usd": 55.31, "share_global_trade": 0.0101921039, "relative_risk_exposure": 50.0, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": -0.6506730852, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Vietnam → USA", "standard_trade_category": "Textiles & Apparel", "mapped_industry": "Retail & Apparel", "trade_value_bn_usd": 49.64, "share_global_trade": 0.0091472797, "relative_risk_exposure": 52.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 4.7964011861, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Israel → USA", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 49.15, "share_global_trade": 0.0090569862, "relative_risk_exposure": 52.6666666667, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 5.5518750488, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Japan → USA", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 44.44, "share_global_trade": 0.0081890634, "relative_risk_exposure": 69.3333333333, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": -0.2337150865, "forecast_outlook": "Mild Contraction", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Morocco → EU", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 42.3, "share_global_trade": 0.0077947206, "relative_risk_exposure": 38.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 5.6175481283, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Australia → China", "standard_trade_category": "Mining & Metals", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 40.41, "share_global_trade": 0.0074464458, "relative_risk_exposure": 63.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 2.8328301642, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Taiwan → China", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 39.64, "share_global_trade": 0.0073045561, "relative_risk_exposure": 70.6666666667, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 2.7866867743, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Malaysia → China", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 39.18, "share_global_trade": 0.0072197909, "relative_risk_exposure": 65.6666666667, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 0.5837845615, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Germany → China", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 37.91, "share_global_trade": 0.006985765, "relative_risk_exposure": 92.0, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 11.0172681785, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "SouthKorea → USA", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 36.9, "share_global_trade": 0.0067996499, "relative_risk_exposure": 44.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 6.2740122835, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Thailand → USA", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 34.24, "share_global_trade": 0.0063094854, "relative_risk_exposure": 45.6666666667, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 6.9838762864, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Brazil → China", "standard_trade_category": "Agriculture & Food", "mapped_industry": "Food & Agriculture", "trade_value_bn_usd": 34.1, "share_global_trade": 0.0062836873, "relative_risk_exposure": 29.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 9.2999432604, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Taiwan → USA", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 32.74, "share_global_trade": 0.0060330769, "relative_risk_exposure": 60.6666666667, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 2.0880325834, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Turkey → EU", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 32.62, "share_global_trade": 0.0060109642, "relative_risk_exposure": 38.6666666667, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 4.0501571274, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "UK → EU", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 24.14, "share_global_trade": 0.0044483346, "relative_risk_exposure": 52.3333333333, "performance_trajectory": "Growing but Slowing", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 1.6361207726, "forecast_outlook": "Moderate Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Singapore → China", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 22.9, "share_global_trade": 0.0042198369, "relative_risk_exposure": 42.0, "performance_trajectory": "Strengthening", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 5.3507114294, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Netherlands → China", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 19.73, "share_global_trade": 0.0036356936, "relative_risk_exposure": 70.6666666667, "performance_trajectory": "Recovering", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 5.693696098, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "China → SouthKorea", "standard_trade_category": "Electronics & Semiconductors", "mapped_industry": "Semiconductors", "trade_value_bn_usd": 19.27, "share_global_trade": 0.0035509283, "relative_risk_exposure": 62.0, "performance_trajectory": "Recovering", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 10.625979598, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Bangladesh → EU", "standard_trade_category": "Textiles & Apparel", "mapped_industry": "Retail & Apparel", "trade_value_bn_usd": 14.92, "share_global_trade": 0.0027493435, "relative_risk_exposure": 45.3333333333, "performance_trajectory": "Strengthening", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 5.212503703, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}, {"corridor": "Peru → China", "standard_trade_category": "Mining & Metals", "mapped_industry": "Energy & Chemicals", "trade_value_bn_usd": 8.11, "share_global_trade": 0.0014944488, "relative_risk_exposure": 63.6666666667, "performance_trajectory": "Strengthening", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 3.4795658497, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "Poland → Germany", "standard_trade_category": "Automotive & Machinery", "mapped_industry": "Automotive", "trade_value_bn_usd": 7.96, "share_global_trade": 0.0014668079, "relative_risk_exposure": 69.3333333333, "performance_trajectory": "Deteriorating", "priority_quadrant": "Elevated Exposure", "predicted_next_year_growth": 4.0047019669, "forecast_outlook": "Strong Growth", "executive_recommendation": "Evaluate diversification opportunities"}, {"corridor": "UAE → India", "standard_trade_category": "Multi-sector Trade", "mapped_industry": "Multi-sector Average", "trade_value_bn_usd": 7.85, "share_global_trade": 0.001446538, "relative_risk_exposure": 25.6666666667, "performance_trajectory": "Deteriorating", "priority_quadrant": "Lower-Risk Opportunity", "predicted_next_year_growth": 8.2315150278, "forecast_outlook": "Strong Growth", "executive_recommendation": "Explore future growth opportunities"}], "validation_results_table": [{"model": "Gradient Boosting", "dataset": "Validation", "MAE": 6.345264367, "RMSE": 9.4763063305, "R2": 0.4455701887}, {"model": "Random Forest", "dataset": "Validation", "MAE": 7.8330407432, "RMSE": 11.3083723367, "R2": 0.2104700839}, {"model": "Ridge Regression", "dataset": "Validation", "MAE": 8.243970149, "RMSE": 11.0955834265, "R2": 0.2399035962}, {"model": "Naive Current-Growth Baseline", "dataset": "Validation", "MAE": 21.6085, "RMSE": 24.4340340304, "R2": -2.6860289365}], "test_results_table": [{"model": "Naive Current-Growth Baseline", "dataset": "Test", "MAE": 12.7099, "RMSE": 37.4199464858, "R2": -1.7979234965, "MAE_improvement_vs_baseline_pct": 0.0}, {"model": "Gradient Boosting", "dataset": "Test", "MAE": 6.7465240763, "RMSE": 20.9422600206, "R2": 0.123651987, "MAE_improvement_vs_baseline_pct": 46.919141171}], "test_prediction_table": [{"year": 2022, "corridor": "Russia → EU", "yoy_growth_pct": -68.04, "growth_3yr_avg": -17.64, "trade_momentum": 7.33, "target_next_year_growth": 217.01, "predicted_next_year_growth": 16.3695898516, "prediction_error": 200.6404101484, "absolute_error": 200.6404101484}, {"year": 2023, "corridor": "South Africa → China", "yoy_growth_pct": 0.3, "growth_3yr_avg": 4.1166666667, "trade_momentum": -12.0866666667, "target_next_year_growth": 11.15, "predicted_next_year_growth": -5.356858478, "prediction_error": 16.506858478, "absolute_error": 16.506858478}, {"year": 2023, "corridor": "Pakistan → EU", "yoy_growth_pct": -4.87, "growth_3yr_avg": 6.7466666667, "trade_momentum": 6.6033333333, "target_next_year_growth": 11.4, "predicted_next_year_growth": -2.6523429551, "prediction_error": 14.0523429551, "absolute_error": 14.0523429551}, {"year": 2022, "corridor": "Germany → China", "yoy_growth_pct": 7.69, "growth_3yr_avg": 2.95, "trade_momentum": 15.95, "target_next_year_growth": 7.09, "predicted_next_year_growth": -5.8988794324, "prediction_error": 12.9888794324, "absolute_error": 12.9888794324}, {"year": 2022, "corridor": "Vietnam → USA", "yoy_growth_pct": -9.31, "growth_3yr_avg": 3.5033333333, "trade_momentum": 24.91, "target_next_year_growth": -2.13, "predicted_next_year_growth": 10.3143824759, "prediction_error": -12.4443824759, "absolute_error": 12.4443824759}, {"year": 2022, "corridor": "China → USA", "yoy_growth_pct": -2.91, "growth_3yr_avg": -1.3966666667, "trade_momentum": 14.5566666667, "target_next_year_growth": -3.34, "predicted_next_year_growth": 9.0350484844, "prediction_error": -12.3750484844, "absolute_error": 12.3750484844}, {"year": 2022, "corridor": "Indonesia → Japan", "yoy_growth_pct": 4.91, "growth_3yr_avg": 2.6233333333, "trade_momentum": 7.4466666667, "target_next_year_growth": 10.58, "predicted_next_year_growth": -1.7800615564, "prediction_error": 12.3600615564, "absolute_error": 12.3600615564}, {"year": 2023, "corridor": "Switzerland → EU", "yoy_growth_pct": -8.58, "growth_3yr_avg": 3.1733333333, "trade_momentum": -2.06, "target_next_year_growth": 12.86, "predicted_next_year_growth": 0.9854501584, "prediction_error": 11.8745498416, "absolute_error": 11.8745498416}, {"year": 2022, "corridor": "Poland → Germany", "yoy_growth_pct": -9.05, "growth_3yr_avg": 3.4766666667, "trade_momentum": 22.7433333333, "target_next_year_growth": -0.13, "predicted_next_year_growth": 11.7196017569, "prediction_error": -11.8496017569, "absolute_error": 11.8496017569}, {"year": 2022, "corridor": "USA → China", "yoy_growth_pct": 7.57, "growth_3yr_avg": -0.5333333333, "trade_momentum": 17.2133333333, "target_next_year_growth": -14.57, "predicted_next_year_growth": -3.5088273581, "prediction_error": -11.0611726419, "absolute_error": 11.0611726419}, {"year": 2023, "corridor": "Japan → USA", "yoy_growth_pct": 3.77, "growth_3yr_avg": 4.0733333333, "trade_momentum": 0.3133333333, "target_next_year_growth": 5.63, "predicted_next_year_growth": -4.9331937785, "prediction_error": 10.5631937785, "absolute_error": 10.5631937785}, {"year": 2022, "corridor": "Malaysia → China", "yoy_growth_pct": 4.44, "growth_3yr_avg": 6.25, "trade_momentum": 20.5166666667, "target_next_year_growth": -10.78, "predicted_next_year_growth": -1.3711980358, "prediction_error": -9.4088019642, "absolute_error": 9.4088019642}, {"year": 2022, "corridor": "Mexico → USA", "yoy_growth_pct": 18.17, "growth_3yr_avg": 9.6666666667, "trade_momentum": 16.94, "target_next_year_growth": -0.24, "predicted_next_year_growth": -9.2700828248, "prediction_error": 9.0300828248, "absolute_error": 9.0300828248}, {"year": 2023, "corridor": "Russia → EU", "yoy_growth_pct": 217.01, "growth_3yr_avg": 52.73, "trade_momentum": -71.0, "target_next_year_growth": -4.79, "predicted_next_year_growth": -13.5769203628, "prediction_error": 8.7869203628, "absolute_error": 8.7869203628}, {"year": 2022, "corridor": "China → EU", "yoy_growth_pct": -2.48, "growth_3yr_avg": 1.2066666667, "trade_momentum": 15.4633333333, "target_next_year_growth": -1.54, "predicted_next_year_growth": 7.240126099, "prediction_error": -8.780126099, "absolute_error": 8.780126099}, {"year": 2023, "corridor": "EU → USA", "yoy_growth_pct": 2.27, "growth_3yr_avg": 7.33, "trade_momentum": -10.31, "target_next_year_growth": -8.88, "predicted_next_year_growth": -0.1540513, "prediction_error": -8.7259487, "absolute_error": 8.7259487}, {"year": 2022, "corridor": "Switzerland → EU", "yoy_growth_pct": 0.71, "growth_3yr_avg": 5.2433333333, "trade_momentum": 21.6566666667, "target_next_year_growth": -8.58, "predicted_next_year_growth": 0.1098292229, "prediction_error": -8.6898292229, "absolute_error": 8.6898292229}, {"year": 2022, "corridor": "Colombia → USA", "yoy_growth_pct": -7.27, "growth_3yr_avg": 1.6933333333, "trade_momentum": 26.1333333333, "target_next_year_growth": 1.81, "predicted_next_year_growth": 10.4123162378, "prediction_error": -8.6023162378, "absolute_error": 8.6023162378}, {"year": 2022, "corridor": "Peru → China", "yoy_growth_pct": 4.07, "growth_3yr_avg": 3.9233333333, "trade_momentum": 15.5266666667, "target_next_year_growth": 5.81, "predicted_next_year_growth": -2.737822093, "prediction_error": 8.547822093, "absolute_error": 8.547822093}, {"year": 2023, "corridor": "Malaysia → China", "yoy_growth_pct": -10.78, "growth_3yr_avg": 4.4733333333, "trade_momentum": 1.9733333333, "target_next_year_growth": 12.46, "predicted_next_year_growth": 4.0792672943, "prediction_error": 8.3807327057, "absolute_error": 8.3807327057}, {"year": 2023, "corridor": "Germany → China", "yoy_growth_pct": 7.09, "growth_3yr_avg": 9.35, "trade_momentum": 4.0466666667, "target_next_year_growth": -14.6, "predicted_next_year_growth": -6.4280527621, "prediction_error": -8.1719472379, "absolute_error": 8.1719472379}, {"year": 2022, "corridor": "Taiwan → China", "yoy_growth_pct": 2.23, "growth_3yr_avg": 3.87, "trade_momentum": 17.8633333333, "target_next_year_growth": -4.14, "predicted_next_year_growth": 3.8546013258, "prediction_error": -7.9946013258, "absolute_error": 7.9946013258}, {"year": 2023, "corridor": "Colombia → USA", "yoy_growth_pct": 1.81, "growth_3yr_avg": 5.7966666667, "trade_momentum": -10.8466666667, "target_next_year_growth": 7.71, "predicted_next_year_growth": -0.0775930978, "prediction_error": 7.7875930978, "absolute_error": 7.7875930978}, {"year": 2023, "corridor": "Saudi Arabia → China", "yoy_growth_pct": -3.95, "growth_3yr_avg": 4.97, "trade_momentum": 5.0966666667, "target_next_year_growth": 4.84, "predicted_next_year_growth": -2.6922969496, "prediction_error": 7.5322969496, "absolute_error": 7.5322969496}, {"year": 2023, "corridor": "USA → China", "yoy_growth_pct": -14.57, "growth_3yr_avg": 0.6433333333, "trade_momentum": 6.1533333333, "target_next_year_growth": 11.64, "predicted_next_year_growth": 4.2157099897, "prediction_error": 7.4242900103, "absolute_error": 7.4242900103}, {"year": 2022, "corridor": "Morocco → EU", "yoy_growth_pct": 6.33, "growth_3yr_avg": 4.6366666667, "trade_momentum": 25.19, "target_next_year_growth": -9.46, "predicted_next_year_growth": -2.305477785, "prediction_error": -7.154522215, "absolute_error": 7.154522215}, {"year": 2023, "corridor": "Vietnam → China", "yoy_growth_pct": 0.27, "growth_3yr_avg": 3.4366666667, "trade_momentum": 3.0633333333, "target_next_year_growth": -8.48, "predicted_next_year_growth": -1.4085146876, "prediction_error": -7.0714853124, "absolute_error": 7.0714853124}, {"year": 2022, "corridor": "Egypt → EU", "yoy_growth_pct": -2.47, "growth_3yr_avg": 3.0733333333, "trade_momentum": 13.3166666667, "target_next_year_growth": 4.03, "predicted_next_year_growth": -2.7998011374, "prediction_error": 6.8298011374, "absolute_error": 6.8298011374}, {"year": 2022, "corridor": "China → SouthKorea", "yoy_growth_pct": -3.23, "growth_3yr_avg": 5.46, "trade_momentum": 32.2966666667, "target_next_year_growth": 10.16, "predicted_next_year_growth": 3.3589291761, "prediction_error": 6.8010708239, "absolute_error": 6.8010708239}, {"year": 2023, "corridor": "China → Japan", "yoy_growth_pct": 9.38, "growth_3yr_avg": 6.26, "trade_momentum": -4.3466666667, "target_next_year_growth": 1.9, "predicted_next_year_growth": -4.8782583458, "prediction_error": 6.7782583458, "absolute_error": 6.7782583458}, {"year": 2022, "corridor": "USA → EU", "yoy_growth_pct": -0.43, "growth_3yr_avg": 1.49, "trade_momentum": 16.7133333333, "target_next_year_growth": -2.07, "predicted_next_year_growth": 4.3371532478, "prediction_error": -6.4071532478, "absolute_error": 6.4071532478}, {"year": 2023, "corridor": "USA → Mexico", "yoy_growth_pct": -13.93, "growth_3yr_avg": 4.34, "trade_momentum": 4.94, "target_next_year_growth": -3.29, "predicted_next_year_growth": 2.7334012465, "prediction_error": -6.0234012465, "absolute_error": 6.0234012465}, {"year": 2023, "corridor": "USA → EU", "yoy_growth_pct": -2.07, "growth_3yr_avg": 4.22, "trade_momentum": -3.2066666667, "target_next_year_growth": 5.57, "predicted_next_year_growth": -0.4190085661, "prediction_error": 5.9890085661, "absolute_error": 5.9890085661}, {"year": 2022, "corridor": "Netherlands → China", "yoy_growth_pct": -9.45, "growth_3yr_avg": -0.2733333333, "trade_momentum": 18.94, "target_next_year_growth": 6.24, "predicted_next_year_growth": 11.8267475688, "prediction_error": -5.5867475688, "absolute_error": 5.5867475688}, {"year": 2022, "corridor": "Indonesia → China", "yoy_growth_pct": 1.19, "growth_3yr_avg": 3.08, "trade_momentum": 22.8833333333, "target_next_year_growth": -2.61, "predicted_next_year_growth": 2.9739323079, "prediction_error": -5.5839323079, "absolute_error": 5.5839323079}, {"year": 2022, "corridor": "South Africa → China", "yoy_growth_pct": -9.65, "growth_3yr_avg": 2.37, "trade_momentum": 24.92, "target_next_year_growth": 0.3, "predicted_next_year_growth": 5.4384446598, "prediction_error": -5.1384446598, "absolute_error": 5.1384446598}, {"year": 2022, "corridor": "Taiwan → USA", "yoy_growth_pct": 1.05, "growth_3yr_avg": 1.27, "trade_momentum": 13.63, "target_next_year_growth": -0.41, "predicted_next_year_growth": 4.4990005364, "prediction_error": -4.9090005364, "absolute_error": 4.9090005364}, {"year": 2023, "corridor": "Egypt → EU", "yoy_growth_pct": 4.03, "growth_3yr_avg": 4.3, "trade_momentum": -5.4933333333, "target_next_year_growth": -0.2, "predicted_next_year_growth": -5.0951131902, "prediction_error": 4.8951131902, "absolute_error": 4.8951131902}, {"year": 2023, "corridor": "Poland → Germany", "yoy_growth_pct": -0.13, "growth_3yr_avg": 3.9533333333, "trade_momentum": -14.27, "target_next_year_growth": 4.33, "predicted_next_year_growth": -0.5051528462, "prediction_error": 4.8351528462, "absolute_error": 4.8351528462}, {"year": 2022, "corridor": "Sweden → EU", "yoy_growth_pct": -1.85, "growth_3yr_avg": 4.7666666667, "trade_momentum": 26.13, "target_next_year_growth": -1.08, "predicted_next_year_growth": 3.6801253305, "prediction_error": -4.7601253305, "absolute_error": 4.7601253305}, {"year": 2023, "corridor": "China → SouthKorea", "yoy_growth_pct": 10.16, "growth_3yr_avg": 12.2366666667, "trade_momentum": -9.5733333333, "target_next_year_growth": -8.85, "predicted_next_year_growth": -4.105061651, "prediction_error": -4.744938349, "absolute_error": 4.744938349}, {"year": 2022, "corridor": "USA → Mexico", "yoy_growth_pct": 7.4, "growth_3yr_avg": 6.9933333333, "trade_momentum": 21.9933333333, "target_next_year_growth": -13.93, "predicted_next_year_growth": -9.4172551818, "prediction_error": -4.5127448182, "absolute_error": 4.5127448182}, {"year": 2023, "corridor": "USA → Canada", "yoy_growth_pct": -0.97, "growth_3yr_avg": 7.5433333333, "trade_momentum": 1.7033333333, "target_next_year_growth": 1.11, "predicted_next_year_growth": -3.3882740686, "prediction_error": 4.4982740686, "absolute_error": 4.4982740686}, {"year": 2023, "corridor": "Netherlands → China", "yoy_growth_pct": 6.24, "growth_3yr_avg": 4.7166666667, "trade_momentum": -15.3, "target_next_year_growth": 2.49, "predicted_next_year_growth": -1.9807983906, "prediction_error": 4.4707983906, "absolute_error": 4.4707983906}, {"year": 2023, "corridor": "Peru → China", "yoy_growth_pct": 5.81, "growth_3yr_avg": 6.99, "trade_momentum": 3.3666666667, "target_next_year_growth": -3.22, "predicted_next_year_growth": -7.5865780269, "prediction_error": 4.3665780269, "absolute_error": 4.3665780269}, {"year": 2022, "corridor": "Thailand → USA", "yoy_growth_pct": 3.19, "growth_3yr_avg": 4.3233333333, "trade_momentum": 26.2666666667, "target_next_year_growth": -2.95, "predicted_next_year_growth": 1.4164206901, "prediction_error": -4.3664206901, "absolute_error": 4.3664206901}, {"year": 2022, "corridor": "Brazil → China", "yoy_growth_pct": 4.33, "growth_3yr_avg": 2.68, "trade_momentum": 14.29, "target_next_year_growth": -3.08, "predicted_next_year_growth": 1.2285307836, "prediction_error": -4.3085307836, "absolute_error": 4.3085307836}, {"year": 2023, "corridor": "Brazil → China", "yoy_growth_pct": -3.08, "growth_3yr_avg": 4.4466666667, "trade_momentum": 0.9666666667, "target_next_year_growth": -5.78, "predicted_next_year_growth": -1.508972559, "prediction_error": -4.271027441, "absolute_error": 4.271027441}, {"year": 2022, "corridor": "Chile → China", "yoy_growth_pct": 1.52, "growth_3yr_avg": 5.5, "trade_momentum": 22.88, "target_next_year_growth": -4.66, "predicted_next_year_growth": -0.3933204876, "prediction_error": -4.2666795124, "absolute_error": 4.2666795124}, {"year": 2023, "corridor": "France → China", "yoy_growth_pct": -2.56, "growth_3yr_avg": 7.1866666667, "trade_momentum": -0.6866666667, "target_next_year_growth": -2.97, "predicted_next_year_growth": 1.2854156582, "prediction_error": -4.2554156582, "absolute_error": 4.2554156582}, {"year": 2023, "corridor": "Taiwan → USA", "yoy_growth_pct": -0.41, "growth_3yr_avg": 3.91, "trade_momentum": 1.58, "target_next_year_growth": 3.12, "predicted_next_year_growth": -1.1097813719, "prediction_error": 4.2297813719, "absolute_error": 4.2297813719}, {"year": 2022, "corridor": "Turkey → EU", "yoy_growth_pct": 0.41, "growth_3yr_avg": 3.6666666667, "trade_momentum": 15.71, "target_next_year_growth": -0.84, "predicted_next_year_growth": 3.2129609002, "prediction_error": -4.0529609002, "absolute_error": 4.0529609002}, {"year": 2022, "corridor": "Saudi Arabia → China", "yoy_growth_pct": 7.22, "growth_3yr_avg": 4.37, "trade_momentum": 14.75, "target_next_year_growth": -3.95, "predicted_next_year_growth": -7.8625814832, "prediction_error": 3.9125814832, "absolute_error": 3.9125814832}, {"year": 2022, "corridor": "Japan → China", "yoy_growth_pct": 4.34, "growth_3yr_avg": 4.31, "trade_momentum": 17.12, "target_next_year_growth": -4.93, "predicted_next_year_growth": -1.0560250374, "prediction_error": -3.8739749626, "absolute_error": 3.8739749626}, {"year": 2022, "corridor": "Canada → USA", "yoy_growth_pct": -7.12, "growth_3yr_avg": 2.23, "trade_momentum": 28.6733333333, "target_next_year_growth": 4.61, "predicted_next_year_growth": 8.4462398813, "prediction_error": -3.8362398813, "absolute_error": 3.8362398813}, {"year": 2023, "corridor": "Vietnam → USA", "yoy_growth_pct": -2.13, "growth_3yr_avg": 4.5966666667, "trade_momentum": -22.6333333333, "target_next_year_growth": 3.76, "predicted_next_year_growth": 0.0613069167, "prediction_error": 3.6986930833, "absolute_error": 3.6986930833}, {"year": 2022, "corridor": "SouthKorea → USA", "yoy_growth_pct": -1.3, "growth_3yr_avg": 4.2666666667, "trade_momentum": 27.6733333333, "target_next_year_growth": 2.16, "predicted_next_year_growth": 5.7162045606, "prediction_error": -3.5562045606, "absolute_error": 3.5562045606}, {"year": 2023, "corridor": "Chile → China", "yoy_growth_pct": -4.66, "growth_3yr_avg": 6.3666666667, "trade_momentum": -4.01, "target_next_year_growth": -4.73, "predicted_next_year_growth": -1.3598872814, "prediction_error": -3.3701127186, "absolute_error": 3.3701127186}, {"year": 2023, "corridor": "Singapore → China", "yoy_growth_pct": 6.54, "growth_3yr_avg": 9.65, "trade_momentum": -6.4633333333, "target_next_year_growth": 0.44, "predicted_next_year_growth": -2.9252109678, "prediction_error": 3.3652109678, "absolute_error": 3.3652109678}, {"year": 2023, "corridor": "India → China", "yoy_growth_pct": 3.51, "growth_3yr_avg": 6.3166666667, "trade_momentum": -6.1066666667, "target_next_year_growth": 1.06, "predicted_next_year_growth": -2.2934736494, "prediction_error": 3.3534736494, "absolute_error": 3.3534736494}, {"year": 2023, "corridor": "UK → EU", "yoy_growth_pct": -3.19, "growth_3yr_avg": 5.3933333333, "trade_momentum": 6.7666666667, "target_next_year_growth": 3.25, "predicted_next_year_growth": 0.0075695376, "prediction_error": 3.2424304624, "absolute_error": 3.2424304624}, {"year": 2023, "corridor": "India → USA", "yoy_growth_pct": -3.65, "growth_3yr_avg": 5.8466666667, "trade_momentum": 1.23, "target_next_year_growth": 2.97, "predicted_next_year_growth": 0.0256791202, "prediction_error": 2.9443208798, "absolute_error": 2.9443208798}, {"year": 2022, "corridor": "EU → USA", "yoy_growth_pct": -6.17, "growth_3yr_avg": 5.5533333333, "trade_momentum": 27.8033333333, "target_next_year_growth": 2.27, "predicted_next_year_growth": 5.0488917214, "prediction_error": -2.7788917214, "absolute_error": 2.7788917214}, {"year": 2023, "corridor": "Bangladesh → EU", "yoy_growth_pct": 12.48, "growth_3yr_avg": 7.9733333333, "trade_momentum": -9.8833333333, "target_next_year_growth": -0.86, "predicted_next_year_growth": -3.6099050028, "prediction_error": 2.7499050028, "absolute_error": 2.7499050028}, {"year": 2023, "corridor": "Nigeria → China", "yoy_growth_pct": -3.98, "growth_3yr_avg": 6.75, "trade_momentum": -14.79, "target_next_year_growth": 0.92, "predicted_next_year_growth": -1.8270206266, "prediction_error": 2.7470206266, "absolute_error": 2.7470206266}, {"year": 2023, "corridor": "Turkey → EU", "yoy_growth_pct": -0.84, "growth_3yr_avg": 4.6033333333, "trade_momentum": -6.85, "target_next_year_growth": 2.61, "predicted_next_year_growth": -0.030769779, "prediction_error": 2.640769779, "absolute_error": 2.640769779}, {"year": 2023, "corridor": "Mexico → Canada", "yoy_growth_pct": 5.13, "growth_3yr_avg": 4.22, "trade_momentum": -4.48, "target_next_year_growth": -6.11, "predicted_next_year_growth": -3.5913963266, "prediction_error": -2.5186036734, "absolute_error": 2.5186036734}, {"year": 2022, "corridor": "China → Japan", "yoy_growth_pct": -1.55, "growth_3yr_avg": 0.2366666667, "trade_momentum": 14.6366666667, "target_next_year_growth": 9.38, "predicted_next_year_growth": 6.9404730811, "prediction_error": 2.4395269189, "absolute_error": 2.4395269189}, {"year": 2022, "corridor": "Bangladesh → EU", "yoy_growth_pct": -6.76, "growth_3yr_avg": -0.82, "trade_momentum": 22.6366666667, "target_next_year_growth": 12.48, "predicted_next_year_growth": 10.1746043983, "prediction_error": 2.3053956017, "absolute_error": 2.3053956017}, {"year": 2022, "corridor": "Nigeria → China", "yoy_growth_pct": -6.3, "growth_3yr_avg": 4.28, "trade_momentum": 37.0833333333, "target_next_year_growth": -3.98, "predicted_next_year_growth": -1.7041363375, "prediction_error": -2.2758636625, "absolute_error": 2.2758636625}, {"year": 2023, "corridor": "Japan → China", "yoy_growth_pct": -4.93, "growth_3yr_avg": 5.0, "trade_momentum": 4.2333333333, "target_next_year_growth": 2.04, "predicted_next_year_growth": -0.2030733287, "prediction_error": 2.2430733287, "absolute_error": 2.2430733287}, {"year": 2022, "corridor": "UAE → India", "yoy_growth_pct": 0.13, "growth_3yr_avg": 3.1233333333, "trade_momentum": 23.8133333333, "target_next_year_growth": 1.51, "predicted_next_year_growth": 3.5811332721, "prediction_error": -2.0711332721, "absolute_error": 2.0711332721}, {"year": 2023, "corridor": "China → EU", "yoy_growth_pct": -1.54, "growth_3yr_avg": 3.49, "trade_momentum": -6.21, "target_next_year_growth": -1.23, "predicted_next_year_growth": 0.733218219, "prediction_error": -1.963218219, "absolute_error": 1.963218219}, {"year": 2023, "corridor": "Thailand → USA", "yoy_growth_pct": -2.95, "growth_3yr_avg": 7.0866666667, "trade_momentum": -0.2566666667, "target_next_year_growth": -0.87, "predicted_next_year_growth": 1.0552831626, "prediction_error": -1.9252831626, "absolute_error": 1.9252831626}, {"year": 2023, "corridor": "Australia → China", "yoy_growth_pct": -6.41, "growth_3yr_avg": 8.11, "trade_momentum": 1.19, "target_next_year_growth": 0.67, "predicted_next_year_growth": -1.1597317847, "prediction_error": 1.8297317847, "absolute_error": 1.8297317847}, {"year": 2023, "corridor": "UAE → India", "yoy_growth_pct": 1.51, "growth_3yr_avg": 7.61, "trade_momentum": -2.7266666667, "target_next_year_growth": -2.85, "predicted_next_year_growth": -1.1820328211, "prediction_error": -1.6679671789, "absolute_error": 1.6679671789}, {"year": 2023, "corridor": "Taiwan → China", "yoy_growth_pct": -4.14, "growth_3yr_avg": 5.15, "trade_momentum": -1.44, "target_next_year_growth": 3.72, "predicted_next_year_growth": 2.0937500029, "prediction_error": 1.6262499971, "absolute_error": 1.6262499971}, {"year": 2022, "corridor": "Australia → China", "yoy_growth_pct": 5.3, "growth_3yr_avg": 8.2233333333, "trade_momentum": 27.8566666667, "target_next_year_growth": -6.41, "predicted_next_year_growth": -4.8037265081, "prediction_error": -1.6062734919, "absolute_error": 1.6062734919}, {"year": 2022, "corridor": "USA → Canada", "yoy_growth_pct": 3.47, "growth_3yr_avg": 4.4233333333, "trade_momentum": 24.4233333333, "target_next_year_growth": -0.97, "predicted_next_year_growth": 0.6092636033, "prediction_error": -1.5792636033, "absolute_error": 1.5792636033}, {"year": 2022, "corridor": "India → China", "yoy_growth_pct": -2.54, "growth_3yr_avg": 2.96, "trade_momentum": 21.62, "target_next_year_growth": 3.51, "predicted_next_year_growth": 4.9467735703, "prediction_error": -1.4367735703, "absolute_error": 1.4367735703}, {"year": 2023, "corridor": "Indonesia → Japan", "yoy_growth_pct": 10.58, "growth_3yr_avg": 6.7866666667, "trade_momentum": 7.2933333333, "target_next_year_growth": -12.44, "predicted_next_year_growth": -13.8690575194, "prediction_error": 1.4290575194, "absolute_error": 1.4290575194}, {"year": 2023, "corridor": "Philippines → USA", "yoy_growth_pct": 1.3, "growth_3yr_avg": 8.25, "trade_momentum": -7.7366666667, "target_next_year_growth": -3.52, "predicted_next_year_growth": -2.1706758059, "prediction_error": -1.3493241941, "absolute_error": 1.3493241941}, {"year": 2023, "corridor": "Morocco → EU", "yoy_growth_pct": -9.46, "growth_3yr_avg": 6.52, "trade_momentum": 2.56, "target_next_year_growth": 1.83, "predicted_next_year_growth": 3.1640588192, "prediction_error": -1.3340588192, "absolute_error": 1.3340588192}, {"year": 2023, "corridor": "Sweden → EU", "yoy_growth_pct": -1.08, "growth_3yr_avg": 6.7866666667, "trade_momentum": -5.7766666667, "target_next_year_growth": -2.22, "predicted_next_year_growth": -0.9121164364, "prediction_error": -1.3078835636, "absolute_error": 1.3078835636}, {"year": 2022, "corridor": "Japan → USA", "yoy_growth_pct": 0.42, "growth_3yr_avg": 0.4766666667, "trade_momentum": 8.61, "target_next_year_growth": 3.77, "predicted_next_year_growth": 5.0736134451, "prediction_error": -1.3036134451, "absolute_error": 1.3036134451}, {"year": 2023, "corridor": "Israel → USA", "yoy_growth_pct": 2.1, "growth_3yr_avg": 3.82, "trade_momentum": 4.38, "target_next_year_growth": 0.16, "predicted_next_year_growth": -1.0422035653, "prediction_error": 1.2022035653, "absolute_error": 1.2022035653}, {"year": 2022, "corridor": "France → China", "yoy_growth_pct": 3.39, "growth_3yr_avg": 5.8866666667, "trade_momentum": 22.4266666667, "target_next_year_growth": -2.56, "predicted_next_year_growth": -1.5046896528, "prediction_error": -1.0553103472, "absolute_error": 1.0553103472}, {"year": 2023, "corridor": "Indonesia → China", "yoy_growth_pct": -2.61, "growth_3yr_avg": 6.7, "trade_momentum": -3.7933333333, "target_next_year_growth": 1.45, "predicted_next_year_growth": 0.7034554438, "prediction_error": 0.7465445562, "absolute_error": 0.7465445562}, {"year": 2022, "corridor": "Mexico → Canada", "yoy_growth_pct": -2.13, "growth_3yr_avg": 0.6866666667, "trade_momentum": 11.92, "target_next_year_growth": 5.13, "predicted_next_year_growth": 5.8471427555, "prediction_error": -0.7171427555, "absolute_error": 0.7171427555}, {"year": 2022, "corridor": "Israel → USA", "yoy_growth_pct": 4.23, "growth_3yr_avg": 0.4866666667, "trade_momentum": 6.0166666667, "target_next_year_growth": 2.1, "predicted_next_year_growth": 2.791218308, "prediction_error": -0.691218308, "absolute_error": 0.691218308}, {"year": 2023, "corridor": "China → USA", "yoy_growth_pct": -3.34, "growth_3yr_avg": 1.1266666667, "trade_momentum": -6.2133333333, "target_next_year_growth": 1.03, "predicted_next_year_growth": 0.3887476985, "prediction_error": 0.6412523015, "absolute_error": 0.6412523015}, {"year": 2023, "corridor": "Canada → USA", "yoy_growth_pct": 4.61, "growth_3yr_avg": 7.6533333333, "trade_momentum": -11.2766666667, "target_next_year_growth": -2.22, "predicted_next_year_growth": -2.819860845, "prediction_error": 0.599860845, "absolute_error": 0.599860845}, {"year": 2023, "corridor": "Mexico → USA", "yoy_growth_pct": -0.24, "growth_3yr_avg": 11.34, "trade_momentum": 14.5566666667, "target_next_year_growth": -4.03, "predicted_next_year_growth": -3.463288301, "prediction_error": -0.566711699, "absolute_error": 0.566711699}, {"year": 2022, "corridor": "Pakistan → EU", "yoy_growth_pct": 7.14, "growth_3yr_avg": 4.0233333333, "trade_momentum": 19.9933333333, "target_next_year_growth": -4.87, "predicted_next_year_growth": -5.4120103733, "prediction_error": 0.5420103733, "absolute_error": 0.5420103733}, {"year": 2022, "corridor": "Philippines → USA", "yoy_growth_pct": 0.38, "growth_3yr_avg": 5.1866666667, "trade_momentum": 26.7633333333, "target_next_year_growth": 1.3, "predicted_next_year_growth": 0.781398521, "prediction_error": 0.518601479, "absolute_error": 0.518601479}, {"year": 2022, "corridor": "UK → EU", "yoy_growth_pct": 7.52, "growth_3yr_avg": 2.87, "trade_momentum": 15.06, "target_next_year_growth": -3.19, "predicted_next_year_growth": -3.6375563251, "prediction_error": 0.4475563251, "absolute_error": 0.4475563251}, {"year": 2023, "corridor": "SouthKorea → USA", "yoy_growth_pct": 2.16, "growth_3yr_avg": 7.9166666667, "trade_momentum": -3.5566666667, "target_next_year_growth": -1.07, "predicted_next_year_growth": -0.6612445974, "prediction_error": -0.4087554026, "absolute_error": 0.4087554026}, {"year": 2022, "corridor": "Singapore → China", "yoy_growth_pct": -1.38, "growth_3yr_avg": 2.27, "trade_momentum": 31.1, "target_next_year_growth": 6.54, "predicted_next_year_growth": 6.3156816666, "prediction_error": 0.2243183334, "absolute_error": 0.2243183334}, {"year": 2022, "corridor": "India → USA", "yoy_growth_pct": 5.04, "growth_3yr_avg": 4.04, "trade_momentum": 21.0166666667, "target_next_year_growth": -3.65, "predicted_next_year_growth": -3.4577909733, "prediction_error": -0.1922090267, "absolute_error": 0.1922090267}, {"year": 2022, "corridor": "Vietnam → China", "yoy_growth_pct": 3.28, "growth_3yr_avg": 1.5033333333, "trade_momentum": 8.6466666667, "target_next_year_growth": 0.27, "predicted_next_year_growth": 0.1405901988, "prediction_error": 0.1294098012, "absolute_error": 0.1294098012}], "builtin_importance": [{"source_feature": "yoy_growth_pct", "builtin_importance": 0.262352696}, {"source_feature": "avg_supply_chain_pressure", "builtin_importance": 0.2559717816}, {"source_feature": "disruption_intensity", "builtin_importance": 0.1190763119}, {"source_feature": "trade_momentum", "builtin_importance": 0.1165786503}, {"source_feature": "growth_3yr_avg", "builtin_importance": 0.0805247568}, {"source_feature": "just_in_time_dependency", "builtin_importance": 0.0283869497}, {"source_feature": "concentration_risk", "builtin_importance": 0.0254235864}, {"source_feature": "share_global_trade", "builtin_importance": 0.0230689202}, {"source_feature": "supplier_concentration_hhi", "builtin_importance": 0.0202537254}, {"source_feature": "trade_value_bn_usd", "builtin_importance": 0.0155585559}, {"source_feature": "overall_vulnerability", "builtin_importance": 0.0134758559}, {"source_feature": "growth_3yr_volatility", "builtin_importance": 0.0134596017}, {"source_feature": "corridor", "builtin_importance": 0.0121766244}, {"source_feature": "trade_value_lag1", "builtin_importance": 0.0078335529}, {"source_feature": "standard_trade_category", "builtin_importance": 0.0043537283}, {"source_feature": "mapped_industry", "builtin_importance": 0.0015047027}], "permutation_importance_table": [{"feature": "yoy_growth_pct", "perm_importance_mean": 0.9942935848, "perm_importance_std": 0.2592423113}, {"feature": "trade_momentum", "perm_importance_mean": 0.6008334205, "perm_importance_std": 0.1660299221}, {"feature": "trade_value_bn_usd", "perm_importance_mean": 0.498457207, "perm_importance_std": 0.1337168694}, {"feature": "share_global_trade", "perm_importance_mean": 0.0406448002, "perm_importance_std": 0.0995498689}, {"feature": "concentration_risk", "perm_importance_mean": 0.017811528, "perm_importance_std": 0.08152908}, {"feature": "mapped_industry", "perm_importance_mean": 0.0085690479, "perm_importance_std": 0.0044482636}, {"feature": "overall_vulnerability", "perm_importance_mean": 0.0069429217, "perm_importance_std": 0.0176040182}, {"feature": "trade_value_lag1", "perm_importance_mean": 0.0053860343, "perm_importance_std": 0.0136999944}, {"feature": "growth_3yr_avg", "perm_importance_mean": 0.0025695134, "perm_importance_std": 0.0853354918}, {"feature": "disruption_intensity", "perm_importance_mean": 0.0, "perm_importance_std": 0.0}, {"feature": "growth_3yr_volatility", "perm_importance_mean": -0.0087001496, "perm_importance_std": 0.0161419102}, {"feature": "standard_trade_category", "perm_importance_mean": -0.0285072695, "perm_importance_std": 0.0187880375}, {"feature": "corridor", "perm_importance_mean": -0.0359198208, "perm_importance_std": 0.043608636}, {"feature": "just_in_time_dependency", "perm_importance_mean": -0.0675700184, "perm_importance_std": 0.0687176731}, {"feature": "supplier_concentration_hhi", "perm_importance_mean": -0.0761108145, "perm_importance_std": 0.0639233677}, {"feature": "avg_supply_chain_pressure", "perm_importance_mean": -0.0893325224, "perm_importance_std": 0.2135663906}], "importance_comparison": [{"source_feature": "yoy_growth_pct", "builtin_importance": 0.262352696, "perm_importance_mean": 0.9942935848, "builtin_rank": 1.0, "perm_rank": 1.0, "rank_gap": 0.0}, {"source_feature": "avg_supply_chain_pressure", "builtin_importance": 0.2559717816, "perm_importance_mean": -0.0893325224, "builtin_rank": 2.0, "perm_rank": 16.0, "rank_gap": 14.0}, {"source_feature": "disruption_intensity", "builtin_importance": 0.1190763119, "perm_importance_mean": 0.0, "builtin_rank": 3.0, "perm_rank": 10.0, "rank_gap": 7.0}, {"source_feature": "trade_momentum", "builtin_importance": 0.1165786503, "perm_importance_mean": 0.6008334205, "builtin_rank": 4.0, "perm_rank": 2.0, "rank_gap": 2.0}, {"source_feature": "growth_3yr_avg", "builtin_importance": 0.0805247568, "perm_importance_mean": 0.0025695134, "builtin_rank": 5.0, "perm_rank": 9.0, "rank_gap": 4.0}, {"source_feature": "just_in_time_dependency", "builtin_importance": 0.0283869497, "perm_importance_mean": -0.0675700184, "builtin_rank": 6.0, "perm_rank": 14.0, "rank_gap": 8.0}, {"source_feature": "concentration_risk", "builtin_importance": 0.0254235864, "perm_importance_mean": 0.017811528, "builtin_rank": 7.0, "perm_rank": 5.0, "rank_gap": 2.0}, {"source_feature": "share_global_trade", "builtin_importance": 0.0230689202, "perm_importance_mean": 0.0406448002, "builtin_rank": 8.0, "perm_rank": 4.0, "rank_gap": 4.0}, {"source_feature": "supplier_concentration_hhi", "builtin_importance": 0.0202537254, "perm_importance_mean": -0.0761108145, "builtin_rank": 9.0, "perm_rank": 15.0, "rank_gap": 6.0}, {"source_feature": "trade_value_bn_usd", "builtin_importance": 0.0155585559, "perm_importance_mean": 0.498457207, "builtin_rank": 10.0, "perm_rank": 3.0, "rank_gap": 7.0}, {"source_feature": "overall_vulnerability", "builtin_importance": 0.0134758559, "perm_importance_mean": 0.0069429217, "builtin_rank": 11.0, "perm_rank": 7.0, "rank_gap": 4.0}, {"source_feature": "growth_3yr_volatility", "builtin_importance": 0.0134596017, "perm_importance_mean": -0.0087001496, "builtin_rank": 12.0, "perm_rank": 11.0, "rank_gap": 1.0}, {"source_feature": "corridor", "builtin_importance": 0.0121766244, "perm_importance_mean": -0.0359198208, "builtin_rank": 13.0, "perm_rank": 13.0, "rank_gap": 0.0}, {"source_feature": "trade_value_lag1", "builtin_importance": 0.0078335529, "perm_importance_mean": 0.0053860343, "builtin_rank": 14.0, "perm_rank": 8.0, "rank_gap": 6.0}, {"source_feature": "standard_trade_category", "builtin_importance": 0.0043537283, "perm_importance_mean": -0.0285072695, "builtin_rank": 15.0, "perm_rank": 12.0, "rank_gap": 3.0}, {"source_feature": "mapped_industry", "builtin_importance": 0.0015047027, "perm_importance_mean": 0.0085690479, "builtin_rank": 16.0, "perm_rank": 6.0, "rank_gap": 10.0}], "tuning_comparison": [{"model": "Hand-picked Gradient Boosting", "validation_MAE": 6.345264367}, {"model": "Tuned Gradient Boosting", "validation_MAE": 7.1946034645}], "flagged_outliers": [{"year": 2022, "corridor": "Russia → EU", "yoy_growth_pct": -68.04, "growth_3yr_avg": -17.64, "trade_momentum": 7.33, "target_next_year_growth": 217.01, "predicted_next_year_growth": 16.3695898516, "prediction_error": 200.6404101484, "absolute_error": 200.6404101484, "standardized_residual": 9.4810759195}], "outlier_sensitivity_table": [{"model": "Gradient Boosting", "dataset": "Test (all observations)", "MAE": 6.7465240763, "RMSE": 20.9422600206, "R2": 0.123651987}, {"model": "Gradient Boosting", "dataset": "Test (outliers excluded)", "MAE": 4.7879999746, "RMSE": 6.0312747975, "R2": -0.0533081802}], "growth_by_risk_level": [{"risk_flag_count": 0, "count": 219, "mean": 1.45, "median": 2.11}, {"risk_flag_count": 1, "count": 361, "mean": 1.05, "median": 0.87}, {"risk_flag_count": 2, "count": 342, "mean": 3.44, "median": 2.37}, {"risk_flag_count": 3, "count": 147, "mean": 2.91, "median": 1.69}, {"risk_flag_count": 4, "count": 31, "mean": 1.38, "median": 1.97}], "risk_validation": {"spearman_corr": 0.05342371496121274, "p_value": 0.07654165993384049, "confusion_matrix": [[541, 108], [381, 70]], "precision_contracted": 0.39325842696629215, "recall_contracted": 0.15521064301552107, "n_observations": 1100}}</script>
+<script>
+const DATA = JSON.parse(document.getElementById('dashboard-data').textContent);
+
+const COLORS = {
+  amber:'#e0973f', amberSoft:'rgba(224,151,63,0.35)',
+  teal:'#46c2b4', tealSoft:'rgba(70,194,180,0.35)',
+  red:'#d1614b', redSoft:'rgba(209,97,75,0.35)',
+  slate:'#7186a6', slateSoft:'rgba(113,134,166,0.35)',
+  green:'#7bbf8a', text:'#e7eaef', dim:'#93a0b3', faint:'#5c6878',
+  grid:'#232a36'
+};
+
+const QUADRANT_COLOR = {
+  'Core Stable Corridors': COLORS.slate,
+  'Elevated Exposure': COLORS.amber,
+  'Strategic Exposure': COLORS.red,
+  'Lower-Risk Opportunity': COLORS.teal
+};
+
+const QUADRANT_BADGE = {
+  'Core Stable Corridors': 'badge-core',
+  'Elevated Exposure': 'badge-elevated',
+  'Strategic Exposure': 'badge-strategic',
+  'Lower-Risk Opportunity': 'badge-lower'
+};
+
+function fmt(n, digits=1){
+  if(n === null || n === undefined || Number.isNaN(n)) return '—';
+  return Number(n).toLocaleString(undefined, {maximumFractionDigits:digits, minimumFractionDigits:0});
+}
+function pct(n, digits=1){ return fmt(n*100, digits) + '%'; }
+
+/* =====================================================================
+   MINIMAL DEPENDENCY-FREE SVG CHART LIBRARY
+   No external library, no network request -- every chart below is
+   plain SVG markup built from the data already embedded in this file.
+   ===================================================================== */
+function svgWrap(w,h,inner){
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%;height:auto;display:block;overflow:visible;" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+}
+
+function lineChart(containerId, xLabels, values, opts={}){
+  const W=640,H=240, padL=44,padR=14,padT=14,padB=26;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const minY = opts.minY ?? Math.min(...values)*0.95;
+  const maxY = opts.maxY ?? Math.max(...values)*1.08;
+  const xScale = i => padL + (values.length<=1?0:(i/(values.length-1))*plotW);
+  const yScale = v => padT + (1-(v-minY)/(maxY-minY))*plotH;
+  const pathD = values.map((v,i)=> (i===0?'M':'L') + xScale(i).toFixed(1) + ' ' + yScale(v).toFixed(1)).join(' ');
+  const areaD = pathD + ` L ${xScale(values.length-1).toFixed(1)} ${(padT+plotH).toFixed(1)} L ${xScale(0).toFixed(1)} ${(padT+plotH).toFixed(1)} Z`;
+  let gridLines='';
+  const ticks=4;
+  for(let t=0;t<=ticks;t++){
+    const v = minY + (maxY-minY)*t/ticks;
+    const y = yScale(v);
+    gridLines += `<line x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${COLORS.grid}" stroke-width="1"/>`;
+    gridLines += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${COLORS.faint}">${fmt(v,0)}</text>`;
+  }
+  let xLabelsSvg='';
+  const step = Math.max(1, Math.ceil(xLabels.length/8));
+  xLabels.forEach((lab,i)=>{
+    if(i%step===0 || i===xLabels.length-1){
+      xLabelsSvg += `<text x="${xScale(i).toFixed(1)}" y="${H-8}" text-anchor="middle" font-size="9" fill="${COLORS.faint}">${lab}</text>`;
+    }
+  });
+  let points='';
+  values.forEach((v,i)=>{
+    points += `<circle cx="${xScale(i).toFixed(1)}" cy="${yScale(v).toFixed(1)}" r="2.5" fill="${opts.color||COLORS.slate}"><title>${xLabels[i]}: ${fmt(v,opts.digits??0)}${opts.suffix||''}</title></circle>`;
+  });
+  const inner = `${gridLines}<path d="${areaD}" fill="${opts.fill||'rgba(113,134,166,0.12)'}" stroke="none"/><path d="${pathD}" fill="none" stroke="${opts.color||COLORS.slate}" stroke-width="2"/>${points}${xLabelsSvg}`;
+  document.getElementById(containerId).innerHTML = svgWrap(W,H,inner);
+}
+
+function donutChart(containerId, labels, values, colorsArr){
+  const size=200, r=size/2-16, strokeW=28, cx=size/2, cy=size/2;
+  const circumference = 2*Math.PI*r;
+  const total = values.reduce((a,b)=>a+b,0);
+  let cum=0, circles='';
+  values.forEach((v,i)=>{
+    const frac = v/total;
+    const dash = frac*circumference;
+    const gap = circumference-dash;
+    const offset = circumference*(1-cum/total);
+    circles += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${colorsArr[i%colorsArr.length]}" stroke-width="${strokeW}" stroke-dasharray="${dash.toFixed(1)} ${gap.toFixed(1)}" stroke-dashoffset="${offset.toFixed(1)}" transform="rotate(-90 ${cx} ${cy})"><title>${labels[i]}: $${fmt(v,0)}Bn (${fmt(frac*100,1)}%)</title></circle>`;
+    cum += v;
+  });
+  const legend = labels.map((lab,i)=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:${COLORS.dim};margin-bottom:6px;"><span style="width:8px;height:8px;border-radius:50%;background:${colorsArr[i%colorsArr.length]};flex:0 0 auto;display:inline-block;"></span><span>${lab} — ${fmt(values[i]/total*100,0)}%</span></div>`).join('');
+  const svg = svgWrap(size,size,circles);
+  document.getElementById(containerId).innerHTML = `<div style="display:flex;gap:20px;align-items:center;flex-wrap:wrap;"><div style="flex:0 0 ${size}px;max-width:${size}px;">${svg}</div><div style="flex:1;min-width:150px;">${legend}</div></div>`;
+}
+
+function hBarChart(containerId, labels, values, colorFn, opts={}){
+  const rowH = opts.rowH || 24;
+  const padL = opts.padL || 176, padR = opts.padR || 56, padT = 8, padB = 8;
+  const W = opts.W || 640;
+  const H = labels.length*rowH + padT + padB;
+  const plotW = W-padL-padR;
+  const allowNeg = !!opts.allowNegative;
+  const maxAbs = opts.maxV || Math.max(...values.map(Math.abs), 1e-9)*1.15;
+  const minV = allowNeg ? -maxAbs : 0;
+  const maxV = maxAbs;
+  const zeroX = padL + ((0-minV)/(maxV-minV))*plotW;
+  let bars='';
+  labels.forEach((lab,i)=>{
+    const v = values[i];
+    const x0 = padL + ((Math.min(v,0)-minV)/(maxV-minV))*plotW;
+    const w = Math.abs(v)/(maxV-minV)*plotW;
+    const y = padT + i*rowH + rowH*0.18;
+    const barH = rowH*0.64;
+    const color = typeof colorFn==='function' ? colorFn(v,i,lab) : colorFn[i%colorFn.length];
+    const shortLab = lab.length>24 ? lab.slice(0,23)+'…' : lab;
+    bars += `<text x="${padL-8}" y="${(y+barH/2+3).toFixed(1)}" text-anchor="end" font-size="10" fill="${COLORS.dim}">${shortLab}</text>`;
+    bars += `<rect x="${x0.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(w,0.5).toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${color}"><title>${lab}: ${fmt(v,opts.digits??1)}${opts.suffix||''}</title></rect>`;
+    if(opts.showValue){
+      const vx = v>=0 ? x0+w+6 : x0-6;
+      bars += `<text x="${vx.toFixed(1)}" y="${(y+barH/2+3).toFixed(1)}" text-anchor="${v>=0?'start':'end'}" font-size="9.5" fill="${COLORS.faint}">${fmt(v,opts.digits??1)}${opts.suffix||''}</text>`;
+    }
+  });
+  const zeroLine = allowNeg ? `<line x1="${zeroX.toFixed(1)}" x2="${zeroX.toFixed(1)}" y1="${padT}" y2="${H-padB}" stroke="${COLORS.grid}" stroke-width="1"/>` : '';
+  document.getElementById(containerId).innerHTML = svgWrap(W,H, zeroLine+bars);
+}
+
+function groupedHBarChart(containerId, labels, series, opts={}){
+  const nSeries = series.length;
+  const rowH = opts.rowH || 30;
+  const barH = (rowH*0.7)/nSeries;
+  const padL = opts.padL || 168, padR=50, padT=8, padB=8;
+  const W = opts.W || 640;
+  const legendH = 26;
+  const H = labels.length*rowH + padT + padB + legendH;
+  const plotW = W-padL-padR;
+  const allVals = series.flatMap(s=>s.values);
+  const maxAbs = Math.max(...allVals.map(Math.abs), 1e-9)*1.15;
+  const allowNeg = !!opts.allowNegative;
+  const minV = allowNeg ? -maxAbs : 0;
+  const maxV = maxAbs;
+  const zeroX = padL + ((0-minV)/(maxV-minV))*plotW;
+  let bars='';
+  labels.forEach((lab,i)=>{
+    const rowY = padT + i*rowH;
+    bars += `<text x="${padL-8}" y="${(rowY+rowH/2+3).toFixed(1)}" text-anchor="end" font-size="10" fill="${COLORS.dim}">${lab}</text>`;
+    series.forEach((s,si)=>{
+      const v = s.values[i];
+      const x0 = padL + ((Math.min(v,0)-minV)/(maxV-minV))*plotW;
+      const w = Math.abs(v)/(maxV-minV)*plotW;
+      const y = rowY + rowH*0.15 + si*barH;
+      bars += `<rect x="${x0.toFixed(1)}" y="${y.toFixed(1)}" width="${Math.max(w,0.5).toFixed(1)}" height="${(barH*0.82).toFixed(1)}" rx="2" fill="${s.color}"><title>${lab} — ${s.name}: ${fmt(v,3)}</title></rect>`;
+    });
+  });
+  const zeroLine = `<line x1="${zeroX.toFixed(1)}" x2="${zeroX.toFixed(1)}" y1="${padT}" y2="${padT+labels.length*rowH}" stroke="${COLORS.grid}" stroke-width="1"/>`;
+  const legendY = padT + labels.length*rowH + 18;
+  let legend='';
+  series.forEach((s,si)=>{
+    const lx = padL + si*180;
+    legend += `<rect x="${lx}" y="${legendY-9}" width="9" height="9" fill="${s.color}"/><text x="${lx+13}" y="${legendY}" font-size="10" fill="${COLORS.dim}">${s.name}</text>`;
+  });
+  document.getElementById(containerId).innerHTML = svgWrap(W,H, zeroLine+bars+legend);
+}
+
+function vBarChart(containerId, labels, values, colorFn, opts={}){
+  const W=opts.W||560, H=opts.H||240;
+  const padL=42, padR=14, padT=14, padB=opts.padB||36;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const maxV = opts.maxV || Math.max(...values,0)*1.15;
+  const minV = opts.minV ?? Math.min(0, Math.min(...values));
+  const barGap = 0.32;
+  const slotW = plotW/labels.length;
+  const bw = slotW*(1-barGap);
+  let gridLines='';
+  const ticks=4;
+  for(let t=0;t<=ticks;t++){
+    const v = minV+(maxV-minV)*t/ticks;
+    const y = padT+(1-(v-minV)/(maxV-minV))*plotH;
+    gridLines += `<line x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${COLORS.grid}" stroke-width="1"/>`;
+    gridLines += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${COLORS.faint}">${fmt(v,opts.digits??0)}</text>`;
+  }
+  let bars='';
+  labels.forEach((lab,i)=>{
+    const v = values[i];
+    const slotX = padL + i*slotW + slotW*barGap/2;
+    const y0 = padT+(1-(0-minV)/(maxV-minV))*plotH;
+    const y1 = padT+(1-(v-minV)/(maxV-minV))*plotH;
+    const y = Math.min(y0,y1), h = Math.abs(y1-y0);
+    const color = typeof colorFn==='function' ? colorFn(v,i,lab) : colorFn[i%colorFn.length];
+    bars += `<rect x="${slotX.toFixed(1)}" y="${y.toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" rx="3" fill="${color}"><title>${lab}: ${fmt(v,opts.digits??1)}${opts.suffix||''}</title></rect>`;
+    const labLines = String(lab).split('\n');
+    labLines.forEach((ll,li)=>{
+      bars += `<text x="${(slotX+bw/2).toFixed(1)}" y="${H-10-((labLines.length-1-li)*10)}" text-anchor="middle" font-size="9" fill="${COLORS.faint}">${ll}</text>`;
+    });
+  });
+  document.getElementById(containerId).innerHTML = svgWrap(W,H, gridLines+bars);
+}
+
+function clipLineToBox(x0,y0,x1,y1,xmin,xmax,ymin,ymax){
+  // Liang-Barsky line-clipping: returns the portion of segment (x0,y0)-(x1,y1)
+  // that lies within [xmin,xmax] x [ymin,ymax], or null if it lies fully outside.
+  let t0=0, t1=1;
+  const dx=x1-x0, dy=y1-y0;
+  const checks=[[-dx, x0-xmin], [dx, xmax-x0], [-dy, y0-ymin], [dy, ymax-y0]];
+  for(const [p,q] of checks){
+    if(p===0){
+      if(q<0) return null;
+    } else {
+      const r=q/p;
+      if(p<0){ if(r>t1) return null; if(r>t0) t0=r; }
+      else{ if(r<t0) return null; if(r<t1) t1=r; }
+    }
+  }
+  return [x0+t0*dx, y0+t0*dy, x0+t1*dx, y0+t1*dy];
+}
+function scatterChart(containerId, datasets, opts={}){
+  const W=opts.W||560, H=opts.H||320;
+  const padL=50, padR=14, padT=14, padB=30;
+  const plotW=W-padL-padR, plotH=H-padT-padB;
+  const allPts = datasets.filter(d=>!d.line).flatMap(d=>d.points);
+  const xs=allPts.map(p=>p.x), ys=allPts.map(p=>p.y);
+  const xMin0=Math.min(...xs), xMax0=Math.max(...xs), yMin0=Math.min(...ys), yMax0=Math.max(...ys);
+  const xPad=(xMax0-xMin0)*0.08||1, yPad=(yMax0-yMin0)*0.08||1;
+  const xMin=xMin0-xPad, xMax=xMax0+xPad, yMin=yMin0-yPad, yMax=yMax0+yPad;
+  const xScale = v => padL + ((v-xMin)/(xMax-xMin))*plotW;
+  const yScale = v => padT + (1-((v-yMin)/(yMax-yMin)))*plotH;
+  let gridLines='';
+  const ticks=4;
+  for(let t=0;t<=ticks;t++){
+    const yv = yMin + (yMax-yMin)*t/ticks;
+    const y = yScale(yv);
+    gridLines += `<line x1="${padL}" x2="${W-padR}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="${COLORS.grid}" stroke-width="1"/>`;
+    gridLines += `<text x="${padL-6}" y="${(y+3).toFixed(1)}" text-anchor="end" font-size="9" fill="${COLORS.faint}">${fmt(yv,opts.yDigits??0)}</text>`;
+    const xv = xMin + (xMax-xMin)*t/ticks;
+    const x = xScale(xv);
+    gridLines += `<text x="${x.toFixed(1)}" y="${H-10}" text-anchor="middle" font-size="9" fill="${COLORS.faint}">${fmt(xv,opts.xDigits??0)}</text>`;
+  }
+  let shapes='';
+  datasets.forEach(d=>{
+    if(d.line){
+      const [p0,p1]=d.points;
+      // Clip the reference line to the plot's data rectangle so it never
+      // overshoots the axes when x and y ranges differ (e.g. a shock year
+      // stretches the actual-growth axis far past the predicted-growth axis).
+      const clipped = clipLineToBox(p0.x,p0.y,p1.x,p1.y, xMin,xMax,yMin,yMax);
+      if(clipped){
+        const [cx0,cy0,cx1,cy1] = clipped;
+        shapes += `<line x1="${xScale(cx0).toFixed(1)}" y1="${yScale(cy0).toFixed(1)}" x2="${xScale(cx1).toFixed(1)}" y2="${yScale(cy1).toFixed(1)}" stroke="${d.color}" stroke-width="1" stroke-dasharray="4 4"/>`;
+      }
+      return;
+    }
+    d.points.forEach(p=>{
+      shapes += `<circle cx="${xScale(p.x).toFixed(1)}" cy="${yScale(p.y).toFixed(1)}" r="${p.r||5}" fill="${d.color}" fill-opacity="${p.opacity??0.72}" stroke="${d.color}" stroke-width="1"><title>${p.tooltip||''}</title></circle>`;
+    });
+  });
+  document.getElementById(containerId).innerHTML = svgWrap(W,H, gridLines+shapes);
+}
+/* ===================================================================== */
+
+/* ---------------- TABS ---------------- */
+document.querySelectorAll('.tab').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.target).classList.add('active');
+    window.scrollTo({top:0, behavior:'instant'});
+  });
+});
+
+/* ---------------- META STRIP ---------------- */
+(function(){
+  const m = DATA.meta;
+  const el = document.getElementById('meta-strip');
+  el.innerHTML = `
+    <span>YEARS <b>${m.year_min}–${m.year_max}</b></span>
+    <span>CORRIDORS <b>${m.n_corridors}</b></span>
+    <span>LATEST-YEAR TRADE <b>$${fmt(m.total_trade_latest_year_bn,0)}Bn</b></span>
+    <span>MODEL <b>${m.best_model_name}</b></span>
+  `;
+})();
+
+/* ---------------- OVERVIEW ---------------- */
+(function(){
+  const testRes = DATA.test_results_table;
+  const naive = testRes.find(r=>r.model.includes('Naive'));
+  const champion = testRes.find(r=>!r.model.includes('Naive'));
+  const kpis = [
+    {label:'Corridors monitored', value: DATA.meta.n_corridors, sub:`${DATA.meta.n_years} years of history`, cls:'k-slate'},
+    {label:'Latest-year trade value', value: '$'+fmt(DATA.meta.total_trade_latest_year_bn,0)+'Bn', sub:`across ${DATA.meta.n_corridors} corridors, ${DATA.meta.latest_year}`, cls:'k-amber'},
+    {label:'Model MAE improvement', value: pct(champion.MAE_improvement_vs_baseline_pct/100,0), sub:`vs. naive baseline, test set`, cls:'k-teal'},
+    {label:'Exposure ↔ growth correlation', value: DATA.risk_validation.spearman_corr.toFixed(2), sub:`weak — the two lenses are largely independent`, cls:'k-red'},
+  ];
+  document.getElementById('kpi-row').innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+})();
+
+lineChart('chart-trade-year',
+  DATA.global_trade_by_year.map(d=>d.year),
+  DATA.global_trade_by_year.map(d=>d.total_trade_bn),
+  {suffix:'Bn', digits:0}
+);
+
+donutChart('chart-sector-donut',
+  DATA.sector_totals_latest.map(d=>d.standard_trade_category),
+  DATA.sector_totals_latest.map(d=>d.trade_value_bn_usd),
+  [COLORS.slate, COLORS.amber, COLORS.teal, COLORS.red, COLORS.green, '#9b8ecb', '#c9a06b', '#6b93c9']
+);
+
+(function(){
+  const d = DATA.top_corridors_latest.slice().sort((a,b)=>b.trade_value_bn_usd-a.trade_value_bn_usd);
+  hBarChart('chart-top-corridors',
+    d.map(r=>r.corridor),
+    d.map(r=>r.trade_value_bn_usd),
+    (v,i)=> d[i].growth_3yr_avg >= 0 ? COLORS.teal : COLORS.red,
+    {rowH:22, digits:1, suffix:'Bn', showValue:true, padR:70}
+  );
+})();
+
+/* ---------------- STRUCTURAL EXPOSURE ---------------- */
+(function(){
+  const qs = DATA.quadrant_summary;
+  const totalCorridors = qs.reduce((a,r)=>a+r.corridor_count,0);
+  const strategic = qs.find(r=>r.priority_quadrant==='Strategic Exposure');
+  const elevated = qs.find(r=>r.priority_quadrant==='Elevated Exposure');
+  const kpis = [
+    {label:'Strategic exposure corridors', value: strategic ? strategic.corridor_count : 0, sub:'high importance + high risk', cls:'k-red'},
+    {label:'Elevated exposure corridors', value: elevated ? elevated.corridor_count : 0, sub:'worth monitoring', cls:'k-amber'},
+    {label:'Total corridors scored', value: totalCorridors, sub:`snapshot year ${DATA.meta.latest_year}`, cls:'k-slate'},
+    {label:'Trade value at elevated+ risk', value: '$'+fmt((strategic?strategic.total_trade_value_bn:0)+(elevated?elevated.total_trade_value_bn:0),0)+'Bn', sub:'combined exposure', cls:'k-amber'},
+  ];
+  document.getElementById('quadrant-kpis').innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+})();
+
+(function(){
+  const groups = {};
+  DATA.quadrant_scatter.forEach(r=>{
+    groups[r.priority_quadrant] = groups[r.priority_quadrant] || [];
+    groups[r.priority_quadrant].push(r);
+  });
+  const maxTrade = Math.max(...DATA.quadrant_scatter.map(r=>r.trade_value_bn_usd));
+  const datasets = Object.keys(groups).map(q=>({
+    color: QUADRANT_COLOR[q],
+    points: groups[q].map(r=>({
+      x:r.share_global_trade*100, y:r.relative_risk_exposure,
+      r: 4 + (r.trade_value_bn_usd/maxTrade)*20,
+      tooltip:`${r.corridor}: ${fmt(r.share_global_trade*100,2)}% share, risk ${fmt(r.relative_risk_exposure,1)}`
+    }))
+  }));
+  scatterChart('chart-quadrant-scatter', datasets, {
+    xDigits:1, yDigits:0
+  });
+  document.getElementById('quadrant-legend').innerHTML = Object.keys(groups).map(q=>
+    `<span><span class="dot" style="background:${QUADRANT_COLOR[q]}"></span>${q} (${groups[q].length})</span>`
+  ).join('');
+})();
+
+vBarChart('chart-risk-dist',
+  DATA.risk_distribution.map(d=>d.overall_risk_category),
+  DATA.risk_distribution.map(d=>d.Corridors),
+  [COLORS.slate, COLORS.amber, COLORS.red, '#a83c28'],
+  {digits:0}
+);
+
+(function(){
+  const cols = [
+    {k:'priority_quadrant', label:'Quadrant', txt:true},
+    {k:'corridor_count', label:'Corridors'},
+    {k:'total_trade_value_bn', label:'Trade Value (Bn)', fmt:v=>fmt(v,0)},
+    {k:'average_risk_exposure', label:'Avg Risk Exposure', fmt:v=>fmt(v,1)},
+    {k:'average_growth', label:'Avg 3yr Growth %', fmt:v=>fmt(v,2)},
+  ];
+  renderStaticTable('table-quadrant-summary', cols, DATA.quadrant_summary);
+})();
+
+/* ---------------- GROWTH DIRECTION ---------------- */
+(function(){
+  const testRes = DATA.test_results_table;
+  const champion = testRes.find(r=>!r.model.includes('Naive'));
+  const naive = testRes.find(r=>r.model.includes('Naive'));
+  const kpis = [
+    {label:'Selected model', value: DATA.meta.best_model_name, sub:'chosen by validation MAE', cls:'k-teal'},
+    {label:'Test MAE', value: fmt(champion.MAE,2), sub:`vs. naive ${fmt(naive.MAE,2)}`, cls:'k-teal'},
+    {label:'Test R²', value: fmt(champion.R2,3), sub:'fragile — sensitive to outliers, see Findings', cls:'k-red'},
+    {label:'Hyperparameter search', value: 'confirmed', sub:'hand-picked config not beaten by random search', cls:'k-slate'},
+  ];
+  document.getElementById('model-kpis').innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value" style="font-size:${k.value.length>10?'17px':'26px'}">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+})();
+
+hBarChart('chart-model-compare',
+  DATA.validation_results_table.map(d=>d.model),
+  DATA.validation_results_table.map(d=>d.MAE),
+  (v,i,lab)=> lab.includes('Naive') ? COLORS.faint : (lab===DATA.meta.best_model_name ? COLORS.teal : COLORS.slate),
+  {rowH:30, digits:2, showValue:true, padL:150}
+);
+
+(function(){
+  const rows = DATA.test_prediction_table;
+  const outlierCorridors = new Set(DATA.flagged_outliers.map(r=>r.corridor+r.year));
+  const normal = rows.filter(r=> !outlierCorridors.has(r.corridor+r.year));
+  const outliers = rows.filter(r=> outlierCorridors.has(r.corridor+r.year));
+  const allVals = rows.flatMap(r=>[r.target_next_year_growth, r.predicted_next_year_growth]);
+  const lo = Math.min(...allVals), hi = Math.max(...allVals);
+  scatterChart('chart-actual-predicted', [
+    {color: COLORS.teal, points: normal.map(r=>({x:r.target_next_year_growth, y:r.predicted_next_year_growth, opacity:0.55,
+      tooltip:`${r.corridor} (${r.year}): actual ${fmt(r.target_next_year_growth,1)}%, predicted ${fmt(r.predicted_next_year_growth,1)}%`}))},
+    {color: COLORS.red, points: outliers.map(r=>({x:r.target_next_year_growth, y:r.predicted_next_year_growth, r:6, opacity:0.9,
+      tooltip:`${r.corridor} (${r.year}) — flagged outlier: actual ${fmt(r.target_next_year_growth,1)}%, predicted ${fmt(r.predicted_next_year_growth,1)}%`}))},
+    {color: COLORS.faint, line:true, points:[{x:lo,y:lo},{x:hi,y:hi}]}
+  ], {xDigits:0, yDigits:0});
+})();
+
+(function(){
+  const merged = DATA.builtin_importance.map(b=>{
+    const p = DATA.permutation_importance_table.find(x=>x.feature===b.source_feature);
+    return {feature:b.source_feature, builtin:b.builtin_importance, perm: p? p.perm_importance_mean : 0};
+  }).sort((a,b)=>b.builtin-a.builtin).slice(0,10);
+  groupedHBarChart('chart-importance',
+    merged.map(m=>m.feature),
+    [
+      {name:'Built-in (impurity)', values: merged.map(m=>m.builtin), color: COLORS.slate},
+      {name:'Permutation (test MAE drop)', values: merged.map(m=>m.perm), color: COLORS.teal}
+    ],
+    {allowNegative:true, rowH:28}
+  );
+})();
+
+(function(){
+  renderStaticTable('table-outlier-sensitivity', [
+    {k:'dataset', label:'Dataset', txt:true},
+    {k:'MAE', label:'MAE', fmt:v=>fmt(v,2)},
+    {k:'RMSE', label:'RMSE', fmt:v=>fmt(v,2)},
+    {k:'R2', label:'R²', fmt:v=>fmt(v,3)},
+  ], DATA.outlier_sensitivity_table);
+
+  renderStaticTable('table-flagged-outlier', [
+    {k:'corridor', label:'Corridor', txt:true},
+    {k:'year', label:'Year'},
+    {k:'target_next_year_growth', label:'Actual %', fmt:v=>fmt(v,1)},
+    {k:'predicted_next_year_growth', label:'Predicted %', fmt:v=>fmt(v,1)},
+    {k:'standardized_residual', label:'Std. Residual', fmt:v=>fmt(v,1)+'σ'},
+  ], DATA.flagged_outliers);
+})();
+
+/* ---------------- FINDINGS ---------------- */
+(function(){
+  const champion = DATA.test_results_table.find(r=>!r.model.includes('Naive'));
+  const findings = [
+    {n:'01', cls:'f-slate', title:'Built-in feature importance is misleading here',
+      body:`The model's impurity-based ranking puts <span class="stat">avg_supply_chain_pressure</span> first at ${pct(DATA.builtin_importance[0].builtin_importance,0)}. Permutation testing on held-out data shows it actually has <span class="stat">negative</span> importance — shuffling it improves predictions. The features that genuinely carry signal are <span class="stat">yoy_growth_pct</span>, <span class="stat">trade_value_bn_usd</span>, and <span class="stat">trade_momentum</span>.`},
+    {n:'02', cls:'f-teal', title:'Hyperparameter tuning confirmed, not improved, the model',
+      body:`A time-series-aware randomized search over Gradient Boosting parameters scored worse on the true validation set (MAE <span class="stat">${fmt(DATA.tuning_comparison[1].validation_MAE,2)}</span>) than the hand-picked configuration (<span class="stat">${fmt(DATA.tuning_comparison[0].validation_MAE,2)}</span>). That's a reassuring result: performance isn't hanging on a lucky guess.`},
+    {n:'03', cls:'f-red', title:'One shock event drives most of the test error',
+      body:`Russia → EU, 2022 sits at a <span class="stat">${fmt(DATA.flagged_outliers[0].standardized_residual,1)}σ</span> standardized residual (a sanctions/energy shock). Removing it: MAE improves from <span class="stat">${fmt(champion.MAE,2)}</span> to <span class="stat">${fmt(DATA.outlier_sensitivity_table[1].MAE,2)}</span>, RMSE from <span class="stat">${fmt(champion.RMSE,1)}</span> to <span class="stat">${fmt(DATA.outlier_sensitivity_table[1].RMSE,1)}</span> — but R² actually gets less stable, not better, once that variance is gone.`},
+    {n:'04', cls:'f-amber', title:'Structural exposure does not predict growth direction',
+      body:`Corridors flagged "High/Critical Risk" correctly flag a contraction only <span class="stat">${pct(DATA.risk_validation.recall_contracted,0)}</span> of the time it happens (recall), with <span class="stat">${pct(DATA.risk_validation.precision_contracted,0)}</span> precision. The exposure scorecard and the growth model answer different questions — see the panel below.`},
+  ];
+  document.getElementById('findings-grid').innerHTML = findings.map(f=>`
+    <div class="finding ${f.cls}">
+      <div class="f-num">${f.n}</div>
+      <div><h4>${f.title}</h4><p>${f.body}</p></div>
+    </div>`).join('');
+
+  document.getElementById('stat-spearman').textContent = DATA.risk_validation.spearman_corr.toFixed(2);
+  document.getElementById('stat-precision').textContent = pct(DATA.risk_validation.precision_contracted,0);
+  document.getElementById('stat-recall').textContent = pct(DATA.risk_validation.recall_contracted,0);
+  document.getElementById('stat-n').textContent = fmt(DATA.risk_validation.n_observations,0);
+})();
+
+vBarChart('chart-risk-growth',
+  DATA.growth_by_risk_level.map(d=>'Flags:\n'+d.risk_flag_count),
+  DATA.growth_by_risk_level.map(d=>d.mean),
+  COLORS.amber,
+  {digits:2, suffix:'%', padB:44}
+);
+
+(function(){
+  const cm = DATA.risk_validation.confusion_matrix; // [[TN, FP],[FN, TP]]
+  const labels = ['Grew, not flagged','Grew, flagged','Contracted, not flagged','Contracted, flagged'];
+  const vals = [cm[0][0], cm[0][1], cm[1][0], cm[1][1]];
+  const shades = [COLORS.slate, COLORS.amber, COLORS.amber, COLORS.teal];
+  document.getElementById('confusion-grid').innerHTML = `
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:6px;">
+      ${vals.map((v,i)=>`
+        <div style="background:${shades[i]}22; border:1px solid ${shades[i]}55; border-radius:8px; padding:14px;">
+          <div style="font-family:'Space Grotesk'; font-size:22px; font-weight:600;">${v}</div>
+          <div style="font-size:11px; color:var(--text-faint); margin-top:4px;">${labels[i]}</div>
+        </div>`).join('')}
+    </div>`;
+})();
+
+/* ---------------- EXPLORER ---------------- */
+(function(){
+  const data = DATA.quadrant_scatter;
+  const quadrants = [...new Set(data.map(d=>d.priority_quadrant))];
+  const sel = document.getElementById('explorer-quadrant-filter');
+  quadrants.forEach(q=>{
+    const o = document.createElement('option'); o.value=q; o.textContent=q; sel.appendChild(o);
+  });
+
+  const cols = [
+    {k:'corridor', label:'Corridor', txt:true},
+    {k:'standard_trade_category', label:'Sector', txt:true},
+    {k:'trade_value_bn_usd', label:'Trade $Bn', fmt:v=>fmt(v,1)},
+    {k:'share_global_trade', label:'Share %', fmt:v=>fmt(v*100,2)},
+    {k:'relative_risk_exposure', label:'Risk Exposure', fmt:v=>fmt(v,1)},
+    {k:'priority_quadrant', label:'Exposure Quadrant', txt:true, badge:QUADRANT_BADGE},
+    {k:'predicted_next_year_growth', label:'Predicted Growth %', fmt:v=>fmt(v,1)},
+    {k:'forecast_outlook', label:'Forecast Outlook', txt:true},
+  ];
+
+  let sortKey = 'trade_value_bn_usd', sortDir = -1;
+
+  function render(){
+    const q = sel.value;
+    const term = document.getElementById('explorer-search').value.toLowerCase();
+    let rows = data.filter(r=>
+      (!q || r.priority_quadrant===q) &&
+      (!term || (r.corridor+r.standard_trade_category+r.mapped_industry).toLowerCase().includes(term))
+    );
+    rows = rows.slice().sort((a,b)=> (a[sortKey]>b[sortKey]?1:-1)*sortDir);
+    document.getElementById('explorer-count').textContent = `${rows.length} of ${data.length} corridors`;
+    renderSortableTable('table-explorer', cols, rows, sortKey, sortDir, (key)=>{
+      if(sortKey===key){ sortDir *= -1; } else { sortKey = key; sortDir = 1; }
+      render();
+    });
+  }
+  document.getElementById('explorer-search').addEventListener('input', render);
+  sel.addEventListener('change', render);
+  render();
+})();
+
+/* ---------------- TABLE HELPERS ---------------- */
+function renderStaticTable(id, cols, rows){
+  renderSortableTable(id, cols, rows, null, 1, null);
+}
+function renderSortableTable(id, cols, rows, sortKey, sortDir, onSort){
+  const el = document.getElementById(id);
+  const thead = `<thead><tr>${cols.map(c=>`<th ${onSort?`data-key="${c.k}"`:''} class="${c.k===sortKey?'sorted':''}">${c.label}${c.k===sortKey?(sortDir===1?' ↑':' ↓'):''}</th>`).join('')}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(r=>`<tr>${cols.map(c=>{
+      let v = r[c.k];
+      let cell = c.fmt ? c.fmt(v) : v;
+      if(c.badge){
+        const cls = c.badge[v] || 'badge-core';
+        cell = `<span class="badge ${cls}">${v}</span>`;
+      }
+      return `<td class="${c.txt?'txt':''}">${cell}</td>`;
+    }).join('')}</tr>`).join('')}</tbody>`;
+  el.innerHTML = thead + tbody;
+  if(onSort){
+    el.querySelectorAll('th').forEach(th=>{
+      th.addEventListener('click', ()=> onSort(th.dataset.key));
+    });
+  }
+}
+</script>
+</body>
+</html>
