@@ -85,7 +85,7 @@ Structural exposure for 2024: **1 Low, 35 Moderate, 13 High, 1 Critical.** Cross
 ```
 ├── Global Trade Risk and Direction Code.ipynb   # Full analysis, Blocks 1–9
 ├── Global Trade Risk and Direction HTML.html    # Interactive dashboard, self-contained
-├── data/                                        # Source datasets (5 CSVs)
+├── data/                                        # Source datasets (7 CSVs)
 └── README.md
 ```
 
